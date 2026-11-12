@@ -8,7 +8,7 @@ BLOG_URL = os.environ.get("BLOG_URL", "").rstrip("/")  # مثال: https://examp
 
 # ---------- النشر ----------
 # True = يُنشر المقال كمسودة لتراجعه ثم تضغط "نشر". غيّرها إلى False بعد أن تطمئن للجودة.
-PUBLISH_AS_DRAFT = os.environ.get("PUBLISH_AS_DRAFT", "true").lower() != "false"
+PUBLISH_AS_DRAFT = os.environ.get("PUBLISH_AS_DRAFT", "false").lower() != "false"
 # عدد المقالات في كل تشغيلة
 ARTICLES_PER_RUN = int(os.environ.get("ARTICLES_PER_RUN") or "1")
 # عدد التصنيفات الإضافية غير القسم (0 = القسم فقط، وهو الأنظف للسيو)
