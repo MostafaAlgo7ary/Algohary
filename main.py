@@ -69,8 +69,9 @@ def build_article(item, section, glossary):
         try:
             article = writer.write_article(item, text, section, glossary, target, problems)
             article = arabic_check.clean_article(article, glossary, k)
-            article = writer.proofread(article, gloss_rows)
-            article = arabic_check.clean_article(article, glossary, k)
+            if config.PROOFREAD:
+                article = writer.proofread(article, gloss_rows)
+                article = arabic_check.clean_article(article, glossary, k)
             article, problems = fit_article(article, target, glossary, item["source"])
         except writer.LLMUnavailable:
             raise   # عطل تقني في النماذج لا ذنب للخبر فيه: لا نحرق الخبر ولا نكمل
