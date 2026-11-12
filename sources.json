@@ -1,0 +1,39 @@
+{
+  "رياضة": [
+    {"name": "Btolat",           "type": "html", "url": "https://www.btolat.com/news"},
+    {"name": "Arriyadiyah",      "type": "html", "url": "https://www.arriyadiyah.com/"},
+    {"name": "So3ody",           "type": "html", "url": "https://www.so3ody.com/"},
+    {"name": "TalkSport",        "type": "html", "url": "https://talksport.com/football/"},
+    {"name": "London Football",  "type": "html", "url": "https://www.football.london/"},
+    {"name": "Yardbarker",       "type": "html", "url": "https://www.yardbarker.com/soccer"},
+    {"name": "FourFourTwo",      "type": "html", "url": "https://www.fourfourtwo.com/news"},
+    {"name": "TeamTalk",         "type": "html", "url": "https://www.teamtalk.com/"},
+    {"name": "Man Evening News", "type": "html", "url": "https://www.manchestereveningnews.co.uk/sport/football/"}
+  ],
+  "تقنية": [
+    {"name": "The Verge",    "type": "rss", "url": "https://www.theverge.com/rss/index.xml"},
+    {"name": "Ars Technica", "type": "rss", "url": "https://feeds.arstechnica.com/arstechnica/index"},
+    {"name": "TechCrunch",   "type": "rss", "url": "https://techcrunch.com/feed/"}
+  ],
+  "ألعاب": [
+    {"name": "IGN",       "type": "rss", "url": "https://feeds.ign.com/ign/games-all"},
+    {"name": "GameSpot",  "type": "rss", "url": "https://www.gamespot.com/feeds/news/"},
+    {"name": "Eurogamer", "type": "rss", "url": "https://www.eurogamer.net/feed"}
+  ],
+  "سفر": [
+    {"name": "Skift",              "type": "rss", "url": "https://skift.com/feed/"},
+    {"name": "Lonely Planet News", "type": "rss", "url": "https://www.lonelyplanet.com/news/feed"}
+  ],
+  "فن": [
+    {"name": "Hyperallergic", "type": "rss", "url": "https://hyperallergic.com/feed/"},
+    {"name": "Colossal",      "type": "rss", "url": "https://www.thisiscolossal.com/feed/"}
+  ],
+  "طعام": [
+    {"name": "Eater",       "type": "rss", "url": "https://www.eater.com/rss/index.xml"},
+    {"name": "Serious Eats","type": "rss", "url": "https://www.seriouseats.com/feeds/serious-eats"}
+  ],
+  "اقتصاد": [
+    {"name": "BBC Business", "type": "rss", "url": "https://feeds.bbci.co.uk/news/business/rss.xml"},
+    {"name": "CNBC",         "type": "rss", "url": "https://www.cnbc.com/id/10001147/device/rss/rss.html"}
+  ]
+}
