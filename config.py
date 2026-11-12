@@ -9,12 +9,26 @@ BLOG_URL = os.environ.get("BLOG_URL", "").rstrip("/")  # مثال: https://examp
 # ---------- النشر ----------
 # True = يُنشر المقال كمسودة لتراجعه ثم تضغط "نشر". غيّرها إلى False بعد أن تطمئن للجودة.
 PUBLISH_AS_DRAFT = os.environ.get("PUBLISH_AS_DRAFT", "true").lower() != "false"
-# عدد المقالات في كل تشغيلة (قسم واحد لكل مقال، بالتناوب)
-ARTICLES_PER_RUN = int(os.environ.get("ARTICLES_PER_RUN", "1"))
+# عدد المقالات في كل تشغيلة
+ARTICLES_PER_RUN = int(os.environ.get("ARTICLES_PER_RUN") or "1")
 # عدد التصنيفات الإضافية غير القسم (0 = القسم فقط، وهو الأنظف للسيو)
-EXTRA_LABELS = int(os.environ.get("EXTRA_LABELS", "0"))
+EXTRA_LABELS = int(os.environ.get("EXTRA_LABELS") or "0")
 # عدد روابط "اقرأ أيضًا" الداخلية
 RELATED_LINKS = 3
+
+
+# ---------- تحكم يدوي من Run workflow ----------
+def _env(name, default=""):
+    return (os.environ.get(name) or default).strip()
+
+
+SECTION_MODE = _env("INPUT_SECTION", "تناوب تلقائي")   # تناوب تلقائي | كل الأقسام | اسم قسم
+EXTERNAL_URL = _env("INPUT_EXTERNAL_URL")               # رابط خبر واحد لتحويله إلى مقال
+CUSTOM_FEED = _env("INPUT_CUSTOM_FEED")                 # رابط RSS/صفحة أخبار بديل
+SOURCE_FILTER = _env("INPUT_SOURCE_FILTER")             # اسم مصدر محدد من sources.json
+WRITING_STYLE = _env("INPUT_STYLE", "افتراضي")          # افتراضي | مختصر | تحليلي | عاجل
+DRY_RUN = _env("INPUT_DRY_RUN", "false").lower() == "true"
+IGNORE_HISTORY = _env("INPUT_IGNORE_HISTORY", "false").lower() == "true"
 
 # ---------- الأقسام (الاسم يجب أن يطابق التصنيف في بلوجر حرفيًا) ----------
 SECTIONS = [
