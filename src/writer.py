@@ -19,6 +19,7 @@ _client = None
 _dead = set()        # نماذج غير موجودة/مُوقفة/ممنوعة: لا نعيد تجربتها في هذه التشغيلة
 _cooldown = {}       # نموذج -> وقت (time.monotonic) يصلح بعده بعد 429
 _no_json_mode = set()  # نماذج لا تدعم response_format
+_no_extras = set()     # نماذج لا تدعم max_completion_tokens/reasoning_effort
 _discovered = None
 
 _NON_CHAT = re.compile(r"whisper|orpheus|tts|guard|safeguard|embed|compound|moderation|distil", re.I)
@@ -82,15 +83,26 @@ def _extract_json(text):
         raise
 
 
-def _call(model, system, user, temperature):
+def _call(model, system, user, temperature, max_tokens=None):
     kwargs = dict(model=model,
                   messages=[{"role": "system", "content": system},
                             {"role": "user", "content": user}],
                   temperature=temperature)
     if model not in _no_json_mode:
         kwargs["response_format"] = {"type": "json_object"}
+    if model not in _no_extras:
+        if max_tokens:   # سقف للرد: يمنع استهلاك الحصة في التفكير الطويل ويقلل أخطاء 429
+            kwargs["max_completion_tokens"] = int(max_tokens)
+        if model.startswith("openai/gpt-oss"):
+            kwargs["reasoning_effort"] = "low"   # تفكير أقصر = رد JSON غير فارغ وتوفير في الحصة
     try:
-        r = _groq().chat.completions.create(**kwargs)
+        try:
+            r = _groq().chat.completions.create(**kwargs)
+        except TypeError:   # نسخة SDK قديمة لا تعرف الوسيطات الإضافية
+            _no_extras.add(model)
+            kwargs.pop("max_completion_tokens", None)
+            kwargs.pop("reasoning_effort", None)
+            r = _groq().chat.completions.create(**kwargs)
     except groq.BadRequestError as e:
         body = getattr(e, "body", None)
         err = body.get("error", body) if isinstance(body, dict) else {}
@@ -100,7 +112,13 @@ def _call(model, system, user, temperature):
                 return _extract_json(failed)
             except Exception:
                 pass
-        if "response_format" in kwargs:  # ربما لا يدعم هذا النموذج وضع JSON: نعيد بدونه
+        if re.search(r"reasoning_effort|max_completion_tokens", str(e)) and (
+                "reasoning_effort" in kwargs or "max_completion_tokens" in kwargs):
+            _no_extras.add(model)        # وسيطة إضافية غير مدعومة لهذا النموذج: نعيد بدونها
+            kwargs.pop("max_completion_tokens", None)
+            kwargs.pop("reasoning_effort", None)
+            r = _groq().chat.completions.create(**kwargs)
+        elif "response_format" in kwargs:  # ربما لا يدعم هذا النموذج وضع JSON: نعيد بدونه
             _no_json_mode.add(model)
             kwargs.pop("response_format")
             r = _groq().chat.completions.create(**kwargs)
@@ -127,7 +145,7 @@ def _handle_error(model, e):
         print(f"⚠️ {model} فشل: {type(e).__name__}: {msg}")
 
 
-def _chat(system, user, temperature):
+def _chat(system, user, temperature, max_tokens=None):
     """يجرب النماذج بالترتيب؛ عند فشل أحدها ينتقل للتالي. عند امتلاء الحدود ينتظر قليلًا ثم يعيد."""
     last = None
     deadline = time.monotonic() + config.LLM_TOTAL_WAIT
@@ -139,7 +157,7 @@ def _chat(system, user, temperature):
             if _cooldown.get(model, 0) > time.monotonic():
                 continue
             try:
-                return _call(model, system, user, temperature)
+                return _call(model, system, user, temperature, max_tokens)
             except LLMUnavailable:
                 raise
             except Exception as e:
@@ -213,6 +231,11 @@ STYLE_NOTES = {
 }
 
 
+def _cap(words):
+    """سقف رموز الرد بحسب عدد كلمات المقال (JSON عربي + تفكير قصير)."""
+    return min(8000, int(words * 3.5) + 2000)
+
+
 def length_plan(target):
     """ميزانية الكلمات: (مقدمة، كلمات العنوان الفرعي، [عدد الفقرات لكل قسم]، متوسط الفقرة)."""
     k = max(1, config.SUBHEADINGS)
@@ -241,7 +264,7 @@ def write_article(item, article_text, section, glossary, target, problems=None):
         user += "\n\n" + STYLE_NOTES[config.WRITING_STYLE]
     if problems:
         user += "\n\nملاحظات من المحاولة السابقة يجب إصلاحها:\n- " + "\n- ".join(problems)
-    return _chat(system, user, temperature=0.5)
+    return _chat(system, user, temperature=0.5, max_tokens=_cap(target))
 
 
 def _merge(old, new):
@@ -258,7 +281,8 @@ def proofread(article, gloss_rows="لا يوجد"):
     system = PROOF_SYSTEM.format(tmax=config.TITLE_MAX, dmax=config.DESCRIPTION_MAX)
     user = f"القاموس الإلزامي للأسماء:\n{gloss_rows}\n\nالمقال:\n{json.dumps(article, ensure_ascii=False)}"
     try:
-        fixed = _chat(system, user, temperature=0.1)
+        fixed = _chat(system, user, temperature=0.1,
+                       max_tokens=_cap(arabic_check.article_words(article)))
     except LLMUnavailable as e:
         print(f"   ⚠️ تعذّرت المراجعة اللغوية، نستخدم المسودة: {str(e)[:80]}")
         return article
@@ -278,4 +302,4 @@ def revise(article, target, problems, gloss_rows="لا يوجد"):
             f"عدد كلمات كل جزء حاليًا:\n{arabic_check.word_report(article)}\n\n"
             "المشكلات المطلوب إصلاحها:\n- " + "\n- ".join(problems) +
             f"\n\nالقاموس الإلزامي للأسماء:\n{gloss_rows}\n\nالمقال:\n{material}")
-    return _merge(article, _chat(system, user, temperature=0.2))
+    return _merge(article, _chat(system, user, temperature=0.2, max_tokens=_cap(target)))
