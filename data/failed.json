@@ -12,5 +12,12 @@
     "section": "رياضة",
     "reason": "مادة المصدر قصيرة جدًا",
     "failed_at": "2026-11-12 14:19:15 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/tech/1031633/apple-tv-4k-4th-gen-review",
+    "source": "The Verge",
+    "section": "تقنية",
+    "reason": "كلمات لاتينية غير مسموحة: K",
+    "failed_at": "2026-11-12 14:31:15 UTC"
   }
 ]
