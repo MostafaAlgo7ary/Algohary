@@ -1,5 +1,6 @@
 """النشر عبر Blogger API."""
 import base64
+import binascii
 import json
 import os
 
@@ -12,12 +13,26 @@ import config
 SCOPES = ["https://www.googleapis.com/auth/blogger"]
 
 
+def _load_token_info(raw):
+    raw = "".join(raw.split())          # يشيل المسافات وسطور النسخ
+    if raw.startswith("{"):             # JSON مباشر بدون base64
+        return json.loads(raw)
+    raw += "=" * (-len(raw) % 4)        # تصحيح الـ padding
+    for decode in (base64.b64decode, base64.urlsafe_b64decode):
+        try:
+            return json.loads(decode(raw).decode("utf-8"))
+        except (binascii.Error, ValueError):
+            continue
+    raise RuntimeError(
+        f"قيمة BLOGGER_TOKEN غير صالحة (طولها {len(raw)} حرفًا فقط). "
+        "أعد توليدها بـ scripts/get_blogger_token.py وانسخها كاملة في الـ Secret.")
+
+
 def _service():
     raw = os.environ.get("BLOGGER_TOKEN", "")
     if not raw:
         raise RuntimeError("متغير BLOGGER_TOKEN غير موجود")
-    info = json.loads(base64.b64decode(raw).decode("utf-8"))
-    creds = Credentials.from_authorized_user_info(info, SCOPES)
+    creds = Credentials.from_authorized_user_info(_load_token_info(raw), SCOPES)
     if not creds.valid:
         creds.refresh(Request())
     return build("blogger", "v3", credentials=creds, cache_discovery=False)
