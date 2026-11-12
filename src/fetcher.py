@@ -12,8 +12,16 @@ HEADERS = {"User-Agent": config.USER_AGENT, "Accept-Language": "ar,en;q=0.8"}
 TIMEOUT = 15
 
 
+BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+
+
 def _get(url):
     r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+    if r.status_code in (403, 406, 429, 503):   # بعض المواقع ترفض الـUA الآلي: نعيد بمتصفح عادي
+        r = requests.get(url, headers={**HEADERS, "User-Agent": BROWSER_UA,
+                                       "Accept": "application/rss+xml, application/xml, text/xml, text/html, */*"},
+                         timeout=TIMEOUT)
     r.raise_for_status()
     return r
 
@@ -23,10 +31,42 @@ def _clean(text):
 
 
 # ---------- RSS ----------
-def fetch_rss(source):
+def _parse_xml(content):
+    """يحلل XML، وعند الفشل ينظّفه من الرموز التالفة ثم يعيد المحاولة."""
+    try:
+        return ET.fromstring(content)
+    except ET.ParseError:
+        text = content.decode("utf-8", "ignore")
+        text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+        text = re.sub(r"&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)", "&amp;", text)
+        return ET.fromstring(text.encode("utf-8"))
+
+
+def _discover_feed(html_bytes, base_url):
+    soup = BeautifulSoup(html_bytes, "html.parser")
+    for l in soup.find_all("link", href=True):
+        t = (l.get("type") or "").lower()
+        if "alternate" in (l.get("rel") or []) and ("rss" in t or "atom" in t):
+            return urljoin(base_url, l["href"])
+    return None
+
+
+def fetch_rss(source, _fallback=True):
     items = []
     try:
-        root = ET.fromstring(_get(source["url"]).content)
+        content = _get(source["url"]).content
+        try:
+            root = _parse_xml(content)
+        except ET.ParseError:
+            # الرابط لا يعيد XML (غالبًا صفحة HTML أو حماية بوتات): نكتشف رابط الـRSS أو نقرأه كصفحة قائمة
+            if not _fallback:
+                raise
+            feed = _discover_feed(content, source["url"])
+            if feed and feed != source["url"]:
+                print(f"ℹ️ {source['name']}: استُخدم رابط RSS المكتشف {feed}")
+                return fetch_rss({**source, "url": feed}, _fallback=False)
+            print(f"ℹ️ {source['name']}: ليس RSS صالحًا، نقرأه كصفحة أخبار")
+            return fetch_html_listing(source)
     except Exception as e:
         print(f"⚠️ فشل RSS {source['name']}: {e}")
         return items
@@ -78,7 +118,10 @@ def fetch_candidates(section_label, sources_cfg):
     out = []
     for source in sources_cfg.get(section_label, []):
         fn = fetch_rss if source["type"] == "rss" else fetch_html_listing
-        out.extend(fn(source))
+        try:
+            out.extend(fn(source))
+        except Exception as e:   # مصدر واحد معطل لا يُسقط القسم كله
+            print(f"⚠️ تخطي المصدر {source.get('name')}: {e}")
     return out
 
 
