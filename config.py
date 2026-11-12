@@ -43,26 +43,22 @@ SECTIONS = [
 
 # ---------- نماذج Groq (تُجرَّب بالترتيب) ----------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-# الترتيب = الأفضل للعربية أولًا. إن فشل نموذج (حد استخدام/غير موجود/انقطاع) ينتقل تلقائيًا للتالي.
-# ملاحظة: qwen/qwen3.6-27b أُوقف في 14/9/2026 وحلّ محله qwen/qwen3.8-27b.
+# النماذج المتاحة فعلًا في حسابك (من لوج التشغيل)، الأفضل أولًا. إن فشل نموذج ينتقل تلقائيًا للتالي.
+# استُبعد allam-2-7b لأنه يكسر الـ JSON ولا يلتزم بعدد الكلمات.
 DEFAULT_GROQ_MODELS = [
     "openai/gpt-oss-120b",
     "qwen/qwen3.8-27b",
     "openai/gpt-oss-20b",
-    "minimaxai/minimax-m2.7",
-    "meta-models/muse-spark-open",
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
 ]
 # لو ضبطت GROQ_MODELS كمتغير بيئة (وكان غير فارغ) يُستعمل بدل القائمة أعلاه
 GROQ_MODELS = [
     m.strip() for m in (os.environ.get("GROQ_MODELS") or "").split(",") if m.strip()
 ] or DEFAULT_GROQ_MODELS
-# يسأل Groq عن قائمة النماذج المتاحة فعلًا لحسابك ويضيف أي نموذج دردشة جديد في آخر الطابور
-GROQ_AUTO_DISCOVER = (os.environ.get("GROQ_AUTO_DISCOVER") or "true").lower() != "false"
-LLM_PASSES = 3             # عدد الدورات الكاملة على كل النماذج قبل الاستسلام
+# معطّل: كان يضيف أي نموذج جديد (مثل allam) في آخر الطابور
+GROQ_AUTO_DISCOVER = (os.environ.get("GROQ_AUTO_DISCOVER") or "false").lower() == "true"
+LLM_PASSES = 8             # عدد الدورات الكاملة على كل النماذج قبل الاستسلام
 LLM_MAX_WAIT = 75          # أقصى انتظار (ثوانٍ) لانتهاء حد الاستخدام لنموذج واحد
-LLM_TOTAL_WAIT = 240       # أقصى انتظار إجمالي لكل طلب
+LLM_TOTAL_WAIT = 600       # أقصى انتظار إجمالي لكل طلب
 LLM_TIMEOUT = 90           # مهلة الطلب الواحد (ثوانٍ)
 
 # ---------- حدود الجودة ----------
@@ -71,6 +67,7 @@ DESCRIPTION_MAX = 150
 MIN_WORDS = 120             # أقل طول لمقال المصدر (بالكلمات)؛ الأقصر يُتجاوز
 MAX_WORDS = 1200            # أقصى طول لمقال المصدر (بالكلمات)؛ الأطول يُتجاوز
 WORD_TOLERANCE = 0          # الفرق المسموح بين عدد كلمات مقالنا ومقال المصدر (0 = مطابقة تامة)
+PROOFREAD = False            # مراجعة لغوية منفصلة (تضاعف الاستهلاك؛ جولات الضبط تكفي غالبًا)
 FIT_ROUNDS = 3              # جولات الضبط (الطول + الصياغة + السيو) بعد الكتابة والمراجعة
 SUBHEADINGS = 1             # عدد العناوين الفرعية في المقال (والباقي فقرات قصيرة، بلا خاتمة)
 PARAGRAPH_WORDS = 55        # متوسط طول الفقرة المستهدف (بالكلمات)
