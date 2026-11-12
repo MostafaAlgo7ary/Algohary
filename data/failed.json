@@ -19,5 +19,19 @@
     "section": "تقنية",
     "reason": "كلمات لاتينية غير مسموحة: K",
     "failed_at": "2026-11-12 14:31:15 UTC"
+  },
+  {
+    "link": "https://www.ign.com/articles/magic-the-gathering-marvel-super-heroes-play-booster-box-black-friday-deal",
+    "source": "IGN",
+    "section": "ألعاب",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 14:50:54 UTC"
+  },
+  {
+    "link": "https://www.gamespot.com/articles/gta-6s-jason-can-live-his-best-life-by-drinking-a-beer-and-eating-a-donut-simultaneously/",
+    "source": "GameSpot",
+    "section": "ألعاب",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-12 14:50:54 UTC"
   }
 ]
