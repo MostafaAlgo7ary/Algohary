@@ -9,7 +9,7 @@ _ARABIC = re.compile(r"[\u0600-\u06FF]")
 def normalize(text):
     if not text:
         return ""
-    text = _DIACRITICS.sub("", text)          # تشكيل وتطويل
+    text = _DIACRITICS.sub("", text)
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\s+([،؛؟.!:])", r"\1", text)
     text = text.replace(",", "،").replace("?", "؟")
@@ -30,6 +30,8 @@ def validate(article, allowed_latin, config):
     text = _all_text(article)
     if not article.get("title"):
         problems.append("العنوان فارغ")
+    elif len(article["title"]) > config.TITLE_MAX + 10:
+        problems.append(f"العنوان أطول من {config.TITLE_MAX} حرفًا")
     if not article.get("sections"):
         problems.append("لا توجد أقسام في المقال")
     bad = {w for w in _LATIN_WORD.findall(text) if w.lower() not in allowed_latin}
@@ -44,9 +46,9 @@ def validate(article, allowed_latin, config):
 
 
 def source_overlap(body, source_text):
-    """نسبة تتابعات الكلمات (3 كلمات) في المقال الموجودة في المصدر."""
+    """نسبة تتابعات (5 كلمات) في المقال الموجودة في المصدر."""
     def grams(t):
         w = re.findall(r"[\u0600-\u06FF\w]+", t.lower())
-        return {tuple(w[i:i + 3]) for i in range(len(w) - 2)}
+        return {tuple(w[i:i + 5]) for i in range(len(w) - 4)}
     b, s = grams(body), grams(source_text)
     return len(b & s) / len(b) if b else 0.0
