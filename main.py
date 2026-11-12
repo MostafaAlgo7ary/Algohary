@@ -17,41 +17,68 @@ def allowed_latin_words():
     return {"var", "vr", "ai", "ps5", "ps4", "pc", "fifa", "uefa", "vpn", "gps", "usb", "5g", "4g"}
 
 
+def fit_article(article, target, glossary, source_name):
+    """جولات ضبط قصيرة حتى يطابق المقال طول المصدر ويخلو من الصياغات الحرفية وذكر المصدر ومشكلات السيو.
+    يعيد (المقال، المشكلات المتبقية)."""
+    k = config.SUBHEADINGS
+    allowed = allowed_latin_words()
+    problems = arabic_check.validate(article, allowed, config, target, source_name, glossary)
+    for round_no in range(1, config.FIT_ROUNDS + 1):
+        if not problems:
+            break
+        print(f"   🔧 جولة ضبط {round_no}/{config.FIT_ROUNDS}: {' | '.join(problems)[:220]}")
+        try:
+            revised = writer.revise(article, target, problems, article_gloss_rows(glossary, article))
+        except writer.LLMUnavailable:
+            raise
+        except Exception as e:
+            print(f"   ⚠️ تعذّرت جولة الضبط: {str(e)[:100]}")
+            break
+        article = arabic_check.clean_article(revised, glossary, k)
+        problems = arabic_check.validate(article, allowed, config, target, source_name, glossary)
+    return article, problems
+
+
+def article_gloss_rows(glossary, article):
+    """صفوف القاموس الخاصة بأسماء المقال (بالعربية) لتثبيت كتابتها في المراجعة."""
+    text = " ".join(arabic_check.body_parts(article) + [article.get("title", "")])
+    rows = [f"{en} = {ar}" for en, ar in glossary.items() if ar and ar in text]
+    return "\n".join(rows[:40]) if rows else "لا يوجد"
+
+
 def build_article(item, section, glossary):
-    """يكتب ويراجع ويتحقق. يعيد (مقال، None) أو (None، سبب الفشل)."""
+    """يكتب ويراجع ويضبط الطول ويتحقق. يعيد (مقال، None) أو (None، سبب الفشل)."""
     text = fetcher.fetch_article_text(item["url"])
     source_text = f"{item['title']} {item.get('summary', '')} {text}"
     if len(source_text) < 300:
         return None, "مادة المصدر قصيرة جدًا"
 
+    # طول المقال المطلوب = عدد كلمات مقال المصدر
+    target = arabic_check.count_words(text)
+    if target < config.MIN_WORDS:
+        return None, f"مقال المصدر قصير جدًا ({target} كلمة)"
+    if target > config.MAX_WORDS:
+        return None, f"مقال المصدر طويل جدًا ({target} كلمة)"
+    print(f"   📏 طول المصدر = الطول المطلوب: {target} كلمة")
+
+    k = config.SUBHEADINGS
+    gloss_rows = writer.glossary_text(glossary, source_text)
     problems = None
     for attempt in range(1, config.MAX_ATTEMPTS + 1):
         print(f"   ✍️ محاولة الكتابة {attempt}/{config.MAX_ATTEMPTS}")
         try:
-            article = writer.write_article(item, text or item.get("summary", ""), section, glossary, problems)
-            article = writer.proofread(article)
+            article = writer.write_article(item, text, section, glossary, target, problems)
+            article = arabic_check.clean_article(article, glossary, k)
+            article = writer.proofread(article, gloss_rows)
+            article = arabic_check.clean_article(article, glossary, k)
+            article, problems = fit_article(article, target, glossary, item["source"])
         except writer.LLMUnavailable:
             raise   # عطل تقني في النماذج لا ذنب للخبر فيه: لا نحرق الخبر ولا نكمل
         except Exception as e:
             problems = [f"خطأ تقني: {str(e)[:100]}"]
             continue
-        if not isinstance(article, dict):
-            problems = ["الرد ليس JSON صالحًا"]
-            continue
-        article.setdefault("sections", [])
 
-        # تنظيف آلي لكل الحقول النصية
-        article["title"] = arabic_check.normalize(article.get("title", ""))
-        article["description"] = arabic_check.normalize(article.get("description", ""))
-        article["intro"] = arabic_check.normalize(article.get("intro", ""))
-        article["conclusion"] = arabic_check.normalize(article.get("conclusion", ""))
-        for s in article.get("sections", []):
-            s["heading"] = arabic_check.normalize(s.get("heading", ""))
-            s["paragraphs"] = [arabic_check.normalize(p) for p in s.get("paragraphs", [])]
-
-        problems = arabic_check.validate(article, allowed_latin_words(), config)
-        body = " ".join([article["intro"], article["conclusion"]] +
-                        [p for s in article["sections"] for p in s["paragraphs"]])
+        body = " ".join(arabic_check.body_parts(article))
         overlap = arabic_check.source_overlap(body, source_text)
         if overlap > config.MAX_SOURCE_OVERLAP:
             problems.append(f"تشابه مرتفع مع المصدر ({overlap:.0%}) — أعد الصياغة بالكامل")
