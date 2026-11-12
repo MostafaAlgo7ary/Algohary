@@ -94,3 +94,24 @@ def fetch_article_text(url, limit=4000):
     paras = [_clean(p.get_text(" ")) for p in soup.find_all("p")]
     text = " ".join(p for p in paras if len(p) > 40)
     return text[:limit]
+
+
+# ---------- للروابط الخارجية والمخصصة ----------
+def fetch_page_title(url):
+    """عنوان صفحة خبر (للروابط الخارجية)."""
+    try:
+        soup = BeautifulSoup(_get(url).content, "html.parser")
+        og = soup.find("meta", property="og:title")
+        if og and og.get("content"):
+            return _clean(og["content"])
+        return _clean(soup.title.get_text(" ")) if soup.title else ""
+    except Exception as e:
+        print(f"⚠️ تعذّر جلب عنوان الرابط: {e}")
+        return ""
+
+
+def guess_source(url):
+    """يخمّن نوع الرابط: rss أو صفحة قائمة."""
+    host = urlparse(url).netloc.replace("www.", "")
+    is_rss = bool(re.search(r"(rss|feed|atom|\.xml)", url, re.I))
+    return {"name": host, "type": "rss" if is_rss else "html", "url": url}
