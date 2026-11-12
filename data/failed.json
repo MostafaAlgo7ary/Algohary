@@ -103,5 +103,19 @@
     "section": "سفر",
     "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
     "failed_at": "2026-11-12 15:57:24 UTC"
+  },
+  {
+    "link": "https://hyperallergic.com/160-000-hans-arp-sculpture-stolen-from-art-cologne/",
+    "source": "Hyperallergic",
+    "section": "فن",
+    "reason": "عدد كلمات المقال 210 والمطلوب 232 بالضبط: أضف 22 كلمة",
+    "failed_at": "2026-11-12 19:42:59 UTC"
+  },
+  {
+    "link": "https://www.thisiscolossal.com/2026/11/peter-morris-architects-the-cloud-house-london/",
+    "source": "Colossal",
+    "section": "فن",
+    "reason": "عدد كلمات المقال 161 والمطلوب 174 بالضبط: أضف 13 كلمة",
+    "failed_at": "2026-11-12 19:51:19 UTC"
   }
 ]
