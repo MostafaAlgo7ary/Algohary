@@ -14,9 +14,19 @@ SCOPES = ["https://www.googleapis.com/auth/blogger"]
 
 
 def _load_token_info(raw):
-    raw = "".join(raw.split())          # يشيل المسافات وسطور النسخ
+    raw = "".join(raw.strip().strip("\"'").split())   # يشيل المسافات والاقتباسات
     if raw.startswith("{"):             # JSON مباشر بدون base64
         return json.loads(raw)
+    if raw.startswith("1//"):           # refresh token لوحده (حوالي 104 حرف)
+        cid = os.environ.get("BLOGGER_CLIENT_ID", "").strip()
+        secret = os.environ.get("BLOGGER_CLIENT_SECRET", "").strip()
+        if not (cid and secret):
+            raise RuntimeError(
+                "BLOGGER_TOKEN يحتوي refresh token فقط. أضف Secrets باسم "
+                "BLOGGER_CLIENT_ID و BLOGGER_CLIENT_SECRET، أو ولّد التوكن الكامل "
+                "بـ scripts/get_blogger_token.py.")
+        return {"refresh_token": raw, "client_id": cid, "client_secret": secret,
+                "token_uri": "https://oauth2.googleapis.com/token"}
     raw += "=" * (-len(raw) % 4)        # تصحيح الـ padding
     for decode in (base64.b64decode, base64.urlsafe_b64decode):
         try:
