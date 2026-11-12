@@ -109,8 +109,30 @@ def apply_glossary(text, glossary):
     return text
 
 
+_INNER_STOP = re.compile(r"(?<!\.)\.(?!\.)\s+(?=(\S+))")
+
+
+def single_stop(text):
+    """نقطة واحدة فقط في نهاية الفقرة: أي نقطة في وسطها تتحول إلى فاصلة (قبل «و/ثم») أو فاصلة منقوطة."""
+    if not text:
+        return text
+
+    def rep(m):
+        return "، " if re.match(r"(?:و|ثم)", m.group(1)) else "؛ "
+
+    text = _INNER_STOP.sub(rep, text).strip()
+    if text and text[-1] not in ".؟!?…":
+        text += "."
+    return text
+
+
+def _no_stop(text):
+    """العناوين: بلا نقطة في النهاية ولا في الوسط."""
+    return single_stop(text).rstrip(".").strip() if text else text
+
+
 def clean_article(article, glossary, subheadings=None):
-    """تنظيف آلي لكل الحقول: القاموس + التطبيع، وضبط بنية المقال."""
+    """تنظيف آلي لكل الحقول: القاموس + التطبيع + نقطة في نهاية الفقرة فقط، وضبط بنية المقال."""
     a = coerce(article, subheadings)
 
     def fix(t):
@@ -118,10 +140,12 @@ def clean_article(article, glossary, subheadings=None):
 
     for k in ("title", "description", "keyphrase", "image_alt", "intro"):
         a[k] = fix(a[k])
+    a["title"] = _no_stop(a["title"])
+    a["intro"] = single_stop(a["intro"])
     a["secondary_keywords"] = [fix(k) for k in a["secondary_keywords"]]
     for s in a["sections"]:
-        s["heading"] = fix(s["heading"])
-        s["paragraphs"] = [fix(p) for p in s["paragraphs"]]
+        s["heading"] = _no_stop(fix(s["heading"]))
+        s["paragraphs"] = [single_stop(fix(p)) for p in s["paragraphs"]]
     return a
 
 
