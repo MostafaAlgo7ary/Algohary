@@ -33,5 +33,75 @@
     "section": "ألعاب",
     "reason": "مادة المصدر قصيرة جدًا",
     "failed_at": "2026-11-12 14:50:54 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/12/air-indias-losses-are-still-bigger-than-singapore-airlines-profit/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:55:23 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/mantis-keeps-building-in-the-gulf-as-demand-shrinks-to-locals/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:56:18 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/dusit-takes-low-risk-bet-on-yangon-as-others-retreat/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:19 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/mcrs-tyler-morse-wants-to-ban-ai-bots-from-booking-his-hotels/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:19 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/citi-says-ai-companies-should-pay-when-their-agents-book-the-wrong-travel/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:20 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/united-airlines-moves-to-block-personal-ai-agents-from-booking-flights/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:21 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/scandics-dalata-deal-just-got-its-first-report-card/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:22 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/playing-catch-up-can-american-close-the-gap-with-delta-and-united/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:23 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/delhis-smog-collides-with-indias-peak-tourism-season/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:24 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/11/visit-oslo-horror-musical-halfdan-video/",
+    "source": "Skift",
+    "section": "سفر",
+    "reason": "خطأ تقني: فشلت كل النماذج: Error code: 404 - {'error': {'message': 'The model `qwen/qwen3.6-27b` does not exis",
+    "failed_at": "2026-11-12 15:57:24 UTC"
   }
 ]
