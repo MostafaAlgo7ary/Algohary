@@ -22,7 +22,8 @@
   ],
   "سفر": [
     {"name": "Skift",              "type": "rss", "url": "https://skift.com/feed/"},
-    {"name": "Lonely Planet News", "type": "rss", "url": "https://www.lonelyplanet.com/news/feed"}
+    {"name": "Atlas Obscura",     "type": "rss", "url": "https://www.atlasobscura.com/feeds/latest"},
+    {"name": "Conde Nast Traveler", "type": "rss", "url": "https://www.cntraveler.com/feed/rss"}
   ],
   "فن": [
     {"name": "Hyperallergic", "type": "rss", "url": "https://hyperallergic.com/feed/"},
