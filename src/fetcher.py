@@ -126,7 +126,7 @@ def fetch_candidates(section_label, sources_cfg):
 
 
 # ---------- نص الخبر (للحقائق فقط) ----------
-def fetch_article_text(url, limit=4000):
+def fetch_article_text(url, limit=None):
     try:
         soup = BeautifulSoup(_get(url).content, "html.parser")
     except Exception as e:
@@ -136,7 +136,7 @@ def fetch_article_text(url, limit=4000):
         t.decompose()
     paras = [_clean(p.get_text(" ")) for p in soup.find_all("p")]
     text = " ".join(p for p in paras if len(p) > 40)
-    return text[:limit]
+    return text[:limit] if limit else text   # النص كاملًا افتراضيًا: نحتاجه لحساب طول المصدر
 
 
 # ---------- للروابط الخارجية والمخصصة ----------
