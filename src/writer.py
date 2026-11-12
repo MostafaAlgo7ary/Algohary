@@ -75,12 +75,21 @@ def _glossary_text(glossary, text_hint):
     return "\n".join(rows) if rows else "لا يوجد"
 
 
+STYLE_NOTES = {
+    "مختصر": "الأسلوب المطلوب: مقال مختصر (250-400 كلمة) وعنوانان فرعيان على الأكثر.",
+    "تحليلي": "الأسلوب المطلوب: مقال تحليلي أعمق يشرح الخلفية والدلالات وما قد يترتب، دون اختلاق وقائع.",
+    "عاجل": "الأسلوب المطلوب: خبر عاجل قصير ومباشر (200-300 كلمة) يبدأ بالأهم فورًا.",
+}
+
+
 def write_article(item, article_text, section, glossary, problems=None):
     material = f"العنوان الأصلي: {item['title']}\nملخص: {item.get('summary', '')}\nالمادة:\n{article_text}"
     system = WRITE_SYSTEM.format(blog=config.BLOG_NAME, schema=SCHEMA)
     user = (f"القسم: {section['label']} ({section['topic']})\n\n"
             f"القاموس الإلزامي للأسماء:\n{_glossary_text(glossary, material)}\n\n"
             f"{material}")
+    if config.WRITING_STYLE in STYLE_NOTES:
+        user += "\n\n" + STYLE_NOTES[config.WRITING_STYLE]
     if problems:
         user += "\n\nملاحظات من المحاولة السابقة يجب إصلاحها:\n- " + "\n- ".join(problems)
     return _chat(system, user, temperature=0.5)
