@@ -30,9 +30,15 @@ def build_article(item, section, glossary):
         try:
             article = writer.write_article(item, text or item.get("summary", ""), section, glossary, problems)
             article = writer.proofread(article)
+        except writer.LLMUnavailable:
+            raise   # عطل تقني في النماذج لا ذنب للخبر فيه: لا نحرق الخبر ولا نكمل
         except Exception as e:
             problems = [f"خطأ تقني: {str(e)[:100]}"]
             continue
+        if not isinstance(article, dict):
+            problems = ["الرد ليس JSON صالحًا"]
+            continue
+        article.setdefault("sections", [])
 
         # تنظيف آلي لكل الحقول النصية
         article["title"] = arabic_check.normalize(article.get("title", ""))
@@ -161,14 +167,22 @@ def main():
     plan, next_index = build_plan()
     forced = external_item(config.EXTERNAL_URL) if config.EXTERNAL_URL else None
     errors = 0
+    llm_down = False
     for section in plan:
         try:
             run_section(section, sources_cfg, glossary, history, forced_item=forced)
+        except writer.LLMUnavailable as e:
+            # كل النماذج معطلة/في حد الاستخدام: لا فائدة من إكمال بقية الأقسام ولا نحرق الأخبار
+            errors += 1
+            llm_down = True
+            print(f"⛔ توقف التشغيل: {e}")
+            RESULTS.append((section["label"], "⛔ النماذج غير متاحة", "-", str(e)[:80]))
+            break
         except Exception as e:  # خطأ في قسم لا يوقف الباقي
             errors += 1
             print(f"❌ خطأ في قسم {section['label']}: {e}")
             RESULTS.append((section["label"], "❌ خطأ", "-", str(e)[:80]))
-    if next_index is not None and not config.DRY_RUN:
+    if next_index is not None and not config.DRY_RUN and not llm_down:
         state.commit_section_index(next_index)
     write_summary()
     if errors:
