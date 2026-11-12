@@ -53,7 +53,7 @@ def related_posts(label, limit):
     try:
         res = _service().posts().list(blogId=config.BLOG_ID, labels=label,
                                       maxResults=limit, fetchBodies=False,
-                                      orderBy="published").execute()
+                                      orderBy="PUBLISHED").execute()
         return [(p["title"], p["url"]) for p in res.get("items", [])]
     except Exception as e:
         print(f"⚠️ تعذّر جلب المقالات ذات الصلة: {e}")
