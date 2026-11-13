@@ -1,7 +1,9 @@
 """كتابة المقال ثم مراجعته لغويًا بنماذج Groq مع تبديل تلقائي بين النماذج."""
 import json
 import re
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import groq
 from groq import Groq
@@ -145,24 +147,66 @@ def _handle_error(model, e):
         print(f"⚠️ {model} فشل: {type(e).__name__}: {msg}")
 
 
-def _chat(system, user, temperature, max_tokens=None):
-    """يجرب النماذج بالترتيب؛ عند فشل أحدها ينتقل للتالي. عند امتلاء الحدود ينتظر قليلًا ثم يعيد."""
+def _valid(res):
+    """رد صالح البنية فقط: وإلا يُعدّ فشلًا لهذا النموذج ولا يفوز بالسباق."""
+    return (isinstance(res, dict) and bool(res.get("intro")) and
+            isinstance(res.get("sections"), list) and bool(res["sections"]))
+
+
+def _race(chain, system, user, temperature, max_tokens, check):
+    """يرسل الطلب لكل النماذج في وقت واحد ويعيد أول رد صالح (الباقي يُهمل)."""
+    stop = threading.Event()
+
+    def run(rank, model):
+        if rank and config.LLM_STAGGER:
+            time.sleep(rank * config.LLM_STAGGER)
+        if stop.is_set():
+            return None
+        try:
+            res = _call(model, system, user, temperature, max_tokens)
+            if check and not check(res):
+                raise ValueError("رد غير صالح البنية")
+            return res
+        except LLMUnavailable:
+            raise
+        except Exception as e:
+            _handle_error(model, e)   # يسجّل حد الاستخدام/الاستبعاد حتى للنماذج المتأخرة
+            raise
+
+    ex = ThreadPoolExecutor(max_workers=len(chain))
+    futs = {ex.submit(run, i, m): m for i, m in enumerate(chain)}
     last = None
-    deadline = time.monotonic() + config.LLM_TOTAL_WAIT
-    for _ in range(config.LLM_PASSES):
-        chain = _model_chain()
-        if not chain:
-            break
-        for model in chain:
-            if _cooldown.get(model, 0) > time.monotonic():
-                continue
+    try:
+        for fut in as_completed(futs):
             try:
-                return _call(model, system, user, temperature, max_tokens)
+                res = fut.result()
             except LLMUnavailable:
                 raise
             except Exception as e:
                 last = e
-                _handle_error(model, e)
+                continue
+            if res is not None:
+                print(f"   🏁 أسرع رد صالح: {futs[fut]} (من {len(chain)} نماذج بالتوازي)")
+                return res, None
+    finally:
+        stop.set()
+        ex.shutdown(wait=False, cancel_futures=True)
+    return None, last
+
+
+def _chat(system, user, temperature, max_tokens=None, check=_valid):
+    """يرسل لكل النماذج المتاحة بالتوازي ويأخذ أسرع رد صالح. عند امتلاء الحدود ينتظر قليلًا ثم يعيد."""
+    last = None
+    deadline = time.monotonic() + config.LLM_TOTAL_WAIT
+    for _ in range(config.LLM_PASSES):
+        chain = [m for m in _model_chain() if _cooldown.get(m, 0) <= time.monotonic()]
+        if chain:
+            res, err = _race(chain, system, user, temperature, max_tokens, check)
+            if res is not None:
+                return res
+            last = err or last
+        elif not _model_chain():
+            break
         # لو كل النماذج الحية في فترة انتظار: ننتظر أقربها إن كان الانتظار معقولًا
         waits = [_cooldown[m] - time.monotonic() for m in _model_chain() if m in _cooldown]
         waits = [w for w in waits if w > 0]
@@ -211,7 +255,7 @@ PROOF_SYSTEM = """أنت مدقق لغوي عربي خبير بالنحو وال
 
 REVISE_SYSTEM = """أنت محرر عربي دقيق. ستتلقى مقالًا بصيغة JSON وقائمة بمشكلات يجب إصلاحها.
 أصلح المشكلات المذكورة فقط بأقل تغيير ممكن، وأبقِ باقي النص كما هو حرفيًا.
-العدّ: الكلمة = أي مقطع يفصله فراغ ويحوي حرفًا أو رقمًا. عدد كلمات المقال = المقدمة + العنوان الفرعي + كل الفقرات (لا خاتمة). عند الإضافة أضف تفصيلًا مفيدًا من معنى النص نفسه دون اختلاق وقائع ودون حشو؛ وعند الحذف احذف الأقل أهمية دون حذف حقيقة. عدّل فقرة أو فقرتين فقط ليتطابق العدد، وأعد العدّ بدقة قبل الإرسال.
+العدّ: الكلمة = أي مقطع يفصله فراغ ويحوي حرفًا أو رقمًا. عدد كلمات المقال = المقدمة + العنوان الفرعي + كل الفقرات (لا خاتمة). عند الإضافة أضف تفصيلًا مفيدًا من معنى النص نفسه دون اختلاق وقائع ودون حشو؛ وعند الحذف احذف الأقل أهمية دون حذف حقيقة. عدّل فقرة أو فقرتين فقط ليتطابق العدد، وأعد العدّ بدقة قبل الإرسال. إن كان النقص 25 كلمة أو أكثر فأضف فقرة جديدة كاملة (بمعلومات من المادة نفسها) بدل مط الفقرات الموجودة.
 وعند استبدال صياغة مترجمة حرفيًا قد يتغير العدد، فعوّض الفرق ليبقى العدد المطلوب بالضبط.
 حافظ على: الأسماء بالعربية وفق القاموس، وخلو النص من الحروف اللاتينية ومن ذكر المصدر، والكلمة المفتاحية في العنوان وأول المقدمة والعنوان الفرعي ووصف الصورة، وعنوان ≤ {tmax} حرفًا ووصف ≤ {dmax} حرفًا، وفقرات قصيرة.
 أعد JSON كاملًا بنفس البنية وأسماء الحقول (بلا خاتمة)."""
@@ -251,8 +295,9 @@ def length_plan(target):
 def write_article(item, article_text, section, glossary, target, problems=None):
     material = f"العنوان الأصلي: {item['title']}\nملخص: {item.get('summary', '')}\nالمادة:\n{article_text}"
     system = WRITE_SYSTEM.format(blog=config.BLOG_NAME, schema=SCHEMA)
-    intro_w, head_w, per_section, para_w = length_plan(target)
-    plan = (f"الطول المطلوب: {target} كلمة بالضبط (هو طول مقال المصدر): مقدمة + عنوان فرعي + فقرات، بلا خاتمة.\n"
+    planned = round(target * config.WRITE_OVERSHOOT)   # النماذج تكتب أقل مما يُطلب
+    intro_w, head_w, per_section, para_w = length_plan(planned)
+    plan = (f"الطول المطلوب: {planned} كلمة بالضبط: مقدمة + عنوان فرعي + فقرات، بلا خاتمة. لا تكتب أقل من هذا العدد.\n"
             f"ميزانية الكلمات: المقدمة {intro_w} كلمة؛ "
             f"{config.SUBHEADINGS} عنوان فرعي (نحو {head_w} كلمات)؛ "
             f"ثم فقرات قصيرة بواقع {', '.join(map(str, per_section))} فقرة لكل عنوان، وكل فقرة نحو {para_w} كلمة.\n"
@@ -297,7 +342,8 @@ def revise(article, target, problems, gloss_rows="لا يوجد"):
     """جولة ضبط: يصلح الطول والصياغة الحرفية والسيو بأقل تغيير ممكن."""
     system = REVISE_SYSTEM.format(tmax=config.TITLE_MAX, dmax=config.DESCRIPTION_MAX)
     material = json.dumps(article, ensure_ascii=False)
-    user = (f"الطول المطلوب: {target} كلمة بالضبط.\n"
+    tol = max(config.WORD_TOLERANCE, round(target * config.WORD_TOLERANCE_PCT / 100))
+    user = (f"الطول المطلوب: {target} كلمة" + (f" (يُقبل ±{tol})" if tol else " بالضبط") + ".\n"
             f"عدد الكلمات الحالي: {arabic_check.article_words(article)}.\n\n"
             f"عدد كلمات كل جزء حاليًا:\n{arabic_check.word_report(article)}\n\n"
             "المشكلات المطلوب إصلاحها:\n- " + "\n- ".join(problems) +
