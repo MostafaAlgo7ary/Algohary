@@ -382,7 +382,8 @@ _ATTRIBUTION = re.compile(
     r"(?:موقع|صحيفة|جريدة|شبكة|وكالة|مجلة)\s+[A-Za-z]")
 
 _GENERIC_SOURCE_WORDS = {"business", "news", "sport", "sports", "evening", "times", "football",
-                         "london", "man", "the", "planet", "lonely", "serious", "eats", "world"}
+                         "london", "man", "the", "planet", "lonely", "serious", "eats", "world",
+                         "اليوم", "المصري", "السابع", "نيوز", "الرياضية"}
 
 
 def source_mentions(article, source_name, glossary):
@@ -390,7 +391,8 @@ def source_mentions(article, source_name, glossary):
     hits = []
     names = {source_name}
     first = re.split(r"[\s.]+", source_name.strip())[0] if source_name else ""
-    if len(first) >= 3 and first.lower() not in _GENERIC_SOURCE_WORDS:
+    min_len = 5 if _ARABIC.search(first) else 3
+    if len(first) >= min_len and first.lower() not in _GENERIC_SOURCE_WORDS:
         names.add(first)
     for n in list(names):
         ar = apply_glossary(n, glossary)
