@@ -159,5 +159,26 @@
     "section": "طعام",
     "reason": "فقرات أطول من 90 كلمة؛ قسّمها إلى فقرات قصيرة؛ عدد كلمات المقال 869 والمطلوب 858 بالضبط: احذف 11 كلمة",
     "failed_at": "2026-11-13 02:23:06 UTC"
+  },
+  {
+    "link": "https://www.bbc.co.uk/news/articles/cmq5vd1wdgz6o?at_medium=RSS&at_campaign=rss",
+    "source": "BBC Business",
+    "section": "اقتصاد",
+    "reason": "عدد كلمات المقال 809 والمطلوب 888 بالضبط: أضف 79 كلمة",
+    "failed_at": "2026-11-13 03:27:41 UTC"
+  },
+  {
+    "link": "https://www.cnbc.com/2026/11/12/star-wars-cosm-dome-screenings.html",
+    "source": "CNBC",
+    "section": "اقتصاد",
+    "reason": "عدد كلمات المقال 597 والمطلوب 587 بالضبط: احذف 10 كلمة",
+    "failed_at": "2026-11-13 03:37:12 UTC"
+  },
+  {
+    "link": "https://www.bbc.co.uk/news/articles/c5gm3g9ldz8xo?at_medium=RSS&at_campaign=rss",
+    "source": "BBC Business",
+    "section": "اقتصاد",
+    "reason": "عدد كلمات المقال 377 والمطلوب 357 بالضبط: احذف 20 كلمة",
+    "failed_at": "2026-11-13 03:47:34 UTC"
   }
 ]
