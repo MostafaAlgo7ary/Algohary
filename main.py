@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+import time
 from urllib.parse import urlparse
 
 import config
@@ -17,26 +18,96 @@ def allowed_latin_words():
     return {"var", "vr", "ai", "ps5", "ps4", "pc", "fifa", "uefa", "vpn", "gps", "usb", "5g", "4g"}
 
 
-def fit_article(article, target, glossary, source_name):
-    """جولات ضبط قصيرة حتى يطابق المقال طول المصدر ويخلو من الصياغات الحرفية وذكر المصدر ومشكلات السيو.
+def _is_length(problem):
+    return problem.startswith("عدد كلمات المقال")
+
+
+def fit_article(article, target, glossary, source_name, source_text=""):
+    """1) جولات مراجعة بالنموذج للصياغة الحرفية/السيو/ذكر المصدر، 2) ضبط الطول بالكلمة:
+    الزائد يُحذف بالكود، والناقص الكبير يُكمَّل بطلب فقرات إضافية، والناقص الصغير بالكود.
     يعيد (المقال، المشكلات المتبقية)."""
     k = config.SUBHEADINGS
     allowed = allowed_latin_words()
-    problems = arabic_check.validate(article, allowed, config, target, source_name, glossary)
+
+    def check(art):
+        return arabic_check.validate(art, allowed, config, target, source_name, glossary)
+
+    problems = check(article)
     for round_no in range(1, config.FIT_ROUNDS + 1):
-        if not problems:
+        other = [p for p in problems if not _is_length(p)]
+        if not other:
             break
-        print(f"   🔧 جولة ضبط {round_no}/{config.FIT_ROUNDS}: {' | '.join(problems)[:220]}")
+        print(f"   🔧 جولة ضبط {round_no}/{config.FIT_ROUNDS}: {' | '.join(other)[:220]}")
         try:
-            revised = writer.revise(article, target, problems, article_gloss_rows(glossary, article))
+            revised = writer.revise(article, target, other, article_gloss_rows(glossary, article), with_length=False)
         except writer.LLMUnavailable:
             raise
         except Exception as e:
             print(f"   ⚠️ تعذّرت جولة الضبط: {str(e)[:100]}")
             break
         article = arabic_check.clean_article(revised, glossary, k)
-        problems = arabic_check.validate(article, allowed, config, target, source_name, glossary)
-    return article, problems
+        problems = check(article)
+
+    # ضبط الطول بالكلمة: كود أولًا، ثم نموذج على فقرة واحدة قصيرة (يسهل عليه عدّها)
+    tol = arabic_check.length_tolerance(config, target)
+    for _ in range(6):
+        diff = target - arabic_check.article_words(article)
+        if abs(diff) <= tol:
+            break
+        if diff < 0:
+            trimmed = arabic_check.trim_to(article, target + tol)
+            if arabic_check.article_words(trimmed) != arabic_check.article_words(article):
+                article = trimmed
+                continue
+        elif diff <= 3:
+            padded = arabic_check.pad_to(article, target)
+            if arabic_check.article_words(padded) != arabic_check.article_words(article):
+                article = padded
+                continue
+        elif diff > 25:
+            print(f"   ➕ إكمال النقص: {diff} كلمة")
+            try:
+                extra = writer.extend(article, diff, source_text, article_gloss_rows(glossary, article))
+            except writer.LLMUnavailable:
+                raise
+            except Exception as e:
+                print(f"   ⚠️ تعذّر الإكمال: {str(e)[:100]}")
+                break
+            article = arabic_check.append_paragraphs(article, extra, glossary)
+            continue
+        refitted = refit_one(article, diff, glossary)
+        if refitted is None:
+            break
+        article = refitted
+    return article, check(article)
+
+
+def refit_one(article, diff, glossary):
+    """يعيد صياغة فقرة واحدة لتزيد/تنقص diff كلمة بالضبط. يعيد المقال الجديد أو None إن لم ينجح."""
+    cands = [(si, pi) for si, sec in enumerate(article["sections"])
+             for pi, p in enumerate(sec["paragraphs"])
+             if arabic_check.count_words(p) + diff >= 12 and
+             arabic_check.count_words(p) >= 12]
+    context = " ".join(arabic_check.body_parts(article))
+    rows = article_gloss_rows(glossary, article)
+    for si, pi in list(reversed(cands))[:3]:
+        para = article["sections"][si]["paragraphs"][pi]
+        have = arabic_check.count_words(para)
+        want, feedback = have + diff, None
+        for _ in range(2):
+            try:
+                new = writer.refit_paragraph(para, want, have, rows, feedback, context)
+            except writer.LLMUnavailable:
+                raise
+            except Exception as e:
+                print(f"   ⚠️ تعذّرت إعادة صياغة الفقرة: {str(e)[:100]}")
+                return None
+            parts = arabic_check.clean_paragraph(new, glossary)
+            n = sum(arabic_check.count_words(x) for x in parts)
+            if n == want:
+                return arabic_check.replace_paragraph(article, si, pi, parts)
+            feedback = f"كتبت {n} كلمة والمطلوب {want} بالضبط ({'احذف' if n > want else 'أضف'} {abs(n - want)})"
+    return None
 
 
 def article_gloss_rows(glossary, article):
@@ -72,7 +143,7 @@ def build_article(item, section, glossary):
             if config.PROOFREAD:
                 article = writer.proofread(article, gloss_rows)
                 article = arabic_check.clean_article(article, glossary, k)
-            article, problems = fit_article(article, target, glossary, item["source"])
+            article, problems = fit_article(article, target, glossary, item["source"], text)
         except writer.LLMUnavailable:
             raise   # عطل تقني في النماذج لا ذنب للخبر فيه: لا نحرق الخبر ولا نكمل
         except Exception as e:
@@ -89,6 +160,7 @@ def build_article(item, section, glossary):
     return None, "؛ ".join(problems or ["فشل غير معروف"])
 
 
+_START = time.monotonic()
 RESULTS = []   # ملخص التشغيلة يظهر في صفحة Summary داخل GitHub
 
 
@@ -128,6 +200,9 @@ def run_section(section, sources_cfg, glossary, history, forced_item=None):
     mixed = [forced_item] if forced_item else pick_candidates(section, sources_cfg, history)
 
     for item in mixed[:config.MAX_CANDIDATES]:
+        if time.monotonic() - _START > config.RUN_BUDGET_SECONDS:
+            print("   ⏱️ انتهت ميزانية وقت التشغيل، نتوقف")
+            break
         print(f" • {item['source']}: {item['title'][:70]}")
         article, reason = build_article(item, section, glossary)
         if not article:
