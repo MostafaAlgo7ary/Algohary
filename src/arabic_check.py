@@ -151,26 +151,53 @@ def single_stop(text):
     return text
 
 
-def _no_stop(text):
-    """العناوين: بلا نقطة في النهاية ولا في الوسط."""
-    return single_stop(text).rstrip(".").strip() if text else text
+def strip_punct(text):
+    """العناوين (الرئيسي والفرعية): بلا أي علامات ترقيم (تبقى الأرقام العشرية و%)."""
+    if not text:
+        return text
+    t = re.sub(r"(?<=\d)[.,،](?=\d)", "\x00", text)
+    t = re.sub(r"[^\w\s%\x00]|_", " ", t).replace("\x00", ".")
+    return re.sub(r"\s+", " ", t).strip()
 
 
-TITLE_LIMIT = 70   # أقصى طول عنوان بعد الإصلاح الآلي
+def _toks(text):
+    return _loose(text).split()
+
+
+def _has(key, text):
+    """الكلمة المفتاحية موجودة كعبارة، أو كل كلماتها موجودة في النص (مع اختلاف السوابق مثل «و»)."""
+    if _occ(key, text):
+        return True
+    words = [w for w in _toks(key) if len(w) > 1]
+    toks = _toks(text)
+    return bool(words) and all(any(w in t for t in toks) for w in words)
+
+
+def _has_any(key, text):
+    """يشترك النص مع الكلمة المفتاحية بكلمة مميزة (3 أحرف فأكثر) على الأقل."""
+    toks = _toks(text)
+    return any(len(w) >= 3 and any(w in t for t in toks) for w in _toks(key))
 
 
 def repair_seo(a):
-    """إصلاحات سيو آلية بلا نموذج: الكلمة المفتاحية في العنوان ووصف الصورة والعنوان الفرعي،
-    وتنقية الكلمات الثانوية (لا تُنشر) بحيث تبقى الموجودة في النص فقط."""
+    """إصلاحات سيو آلية بلا نموذج وبلا تشويه العنوان:
+    - إن لم تكن الكلمة المفتاحية في العنوان نأخذها من العنوان نفسه (أقرب نافذة 2-3 كلمات لها)،
+    - وصف الصورة = العنوان إن خلا من الكلمة المفتاحية،
+    - الكلمات الثانوية (لا تُنشر) تبقى الموجودة في النص فقط."""
     key = a.get("keyphrase", "")
-    if key:
-        if not _occ(key, a["title"]) and len(key) + 2 + len(a["title"]) <= TITLE_LIMIT:
-            a["title"] = f"{key}: {a['title']}"
-        if not _occ(key, a["image_alt"]):
-            a["image_alt"] = a["title"] if _occ(key, a["title"]) else key
-        heads = [s["heading"] for s in a["sections"]]
-        if a["sections"] and not any(_occ(k, h) for h in heads for k in [key] + a["secondary_keywords"]):
-            a["sections"][0]["heading"] = f"{key}: {a['sections'][0]['heading']}".strip(": ")
+    title_words = a["title"].split()
+    if key and title_words and not _has(key, a["title"]):
+        best = None
+        for size in (3, 2):
+            for i in range(0, len(title_words) - size + 1):
+                window = " ".join(title_words[i:i + size])
+                score = sum(1 for w in _toks(key) if len(w) >= 3 and any(w in t for t in _toks(window)))
+                if score and (best is None or score > best[0]):
+                    best = (score, window)
+        if best:
+            a["keyphrase"] = key = best[1]
+    if key and not _has(key, a["image_alt"]):
+        a["image_alt"] = a["title"]
     body = " ".join(x for x in body_parts(a) if x)
     a["secondary_keywords"] = [k for k in a["secondary_keywords"] if _occ(k, body)]
     return a
@@ -185,11 +212,11 @@ def clean_article(article, glossary, subheadings=None):
 
     for k in ("title", "description", "keyphrase", "image_alt", "intro"):
         a[k] = fix(a[k])
-    a["title"] = _no_stop(a["title"])
+    a["title"] = strip_punct(a["title"])
     a["intro"] = single_stop(a["intro"])
     a["secondary_keywords"] = [fix(k) for k in a["secondary_keywords"]]
     for s in a["sections"]:
-        s["heading"] = _no_stop(fix(s["heading"]))
+        s["heading"] = strip_punct(fix(s["heading"]))
         s["paragraphs"] = [q for p in s["paragraphs"] for q in split_long(single_stop(fix(p)))]
     intro_parts = split_long(a["intro"])
     if len(intro_parts) > 1 and a["sections"]:   # فائض المقدمة الطويلة يصير أول فقرات القسم
@@ -403,24 +430,24 @@ def seo_problems(article):
     klen = len(key.split())
     if klen < 2 or klen > 5:
         p.append("الكلمة المفتاحية يجب أن تكون من 2 إلى 4 كلمات")
-    if not _occ(key, article.get("title", "")):
+    if not _has(key, article.get("title", "")):
         p.append("الكلمة المفتاحية غير موجودة في العنوان (ضعها في بدايته)")
-    if not _occ(key, article.get("intro", "")[:160]):
-        p.append("الكلمة المفتاحية غير موجودة في أول 160 حرفًا من المقدمة")
+    if not _has(key, article.get("intro", "")[:200]):
+        p.append("الكلمة المفتاحية غير موجودة في بداية المقدمة")
     if not article.get("image_alt"):
         p.append("وصف الصورة (image_alt) مفقود")
-    elif not _occ(key, article["image_alt"]):
-        p.append("الكلمة المفتاحية غير موجودة في وصف الصورة")
     sec = article.get("secondary_keywords", [])
     heads = [s.get("heading", "") for s in article.get("sections", [])]
-    if not any(_occ(k, h) for h in heads for k in [key] + sec):
-        p.append("لا يوجد عنوان فرعي يحوي الكلمة المفتاحية أو إحدى الكلمات الثانوية")
+    if not any(_has_any(k, h) for h in heads for k in [key] + sec):
+        p.append("لا يوجد عنوان فرعي يحوي كلمة من الكلمة المفتاحية أو الكلمات الثانوية")
     body = " ".join(x for x in body_parts(article) if x)
     occ = _occ(key, body)
+    if not occ and _has(key, body):
+        occ = 1
     lo = 2 if n_words >= 250 else 1
     hi = max(4, int(n_words * 0.04 / max(klen, 1)) + 1)
-    if occ < lo:
-        p.append(f"الكلمة المفتاحية ظهرت {occ} مرة فقط في النص؛ كررها طبيعيًا {lo} مرات على الأقل")
+    if occ < lo and not _has(key, body):
+        p.append(f"الكلمة المفتاحية ظهرت {occ} مرة فقط في النص؛ كررها طبيعيًا")
     elif occ > hi:
         p.append(f"حشو للكلمة المفتاحية ({occ} مرة)؛ لا تتجاوز {hi} مرات")
     return p
