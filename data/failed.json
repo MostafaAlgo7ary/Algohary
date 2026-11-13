@@ -180,5 +180,19 @@
     "section": "اقتصاد",
     "reason": "عدد كلمات المقال 377 والمطلوب 357 بالضبط: احذف 20 كلمة",
     "failed_at": "2026-11-13 03:47:34 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/tech/1032774/president-donald-trump-tim-cook-nvidia-jensen-huang",
+    "source": "The Verge",
+    "section": "تقنية",
+    "reason": "عدد كلمات المقال 492 والمطلوب 505 بالضبط: أضف 13 كلمة",
+    "failed_at": "2026-11-13 04:26:25 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/health/2026/11/in-reversal-american-cancer-society-urges-prostate-cancer-tests-for-all-men/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-13 04:26:25 UTC"
   }
 ]
