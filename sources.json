@@ -1,40 +1,100 @@
 {
   "رياضة": [
-    {"name": "Btolat",           "type": "html", "url": "https://www.btolat.com/news"},
-    {"name": "Arriyadiyah",      "type": "html", "url": "https://www.arriyadiyah.com/"},
-    {"name": "So3ody",           "type": "html", "url": "https://www.so3ody.com/"},
-    {"name": "TalkSport",        "type": "html", "url": "https://talksport.com/football/"},
-    {"name": "London Football",  "type": "html", "url": "https://www.football.london/"},
-    {"name": "Yardbarker",       "type": "html", "url": "https://www.yardbarker.com/soccer"},
-    {"name": "FourFourTwo",      "type": "html", "url": "https://www.fourfourtwo.com/news"},
-    {"name": "TeamTalk",         "type": "html", "url": "https://www.teamtalk.com/"},
-    {"name": "Man Evening News", "type": "html", "url": "https://www.manchestereveningnews.co.uk/sport/football/"}
+    {"name": "Btolat", "type": "html", "url": "https://www.btolat.com/news"},
+    {"name": "Arriyadiyah", "type": "html", "url": "https://www.arriyadiyah.com/"},
+    {"name": "So3ody", "type": "html", "url": "https://www.so3ody.com/"},
+    {"name": "TalkSport", "type": "html", "url": "https://talksport.com/football/"},
+    {"name": "London Football", "type": "html", "url": "https://www.football.london/"},
+    {"name": "Yardbarker", "type": "html", "url": "https://www.yardbarker.com/soccer"},
+    {"name": "FourFourTwo", "type": "html", "url": "https://www.fourfourtwo.com/news"},
+    {"name": "TeamTalk", "type": "html", "url": "https://www.teamtalk.com/"},
+    {"name": "Man Evening News", "type": "html", "url": "https://www.manchestereveningnews.co.uk/sport/football/"},
+    {"name": "اليوم السابع", "type": "html", "url": "https://m.youm7.com/Section/%D8%A3%D8%AE%D8%A8%D8%A7%D8%B1-%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6%D8%A9/298/1"},
+    {"name": "ون ون", "type": "html", "url": "https://www.winwin.com/"},
+    {"name": "المصري اليوم", "type": "html", "url": "https://www.almasryalyoum.com/section/index/8"}
   ],
   "تقنية": [
-    {"name": "The Verge",    "type": "rss", "url": "https://www.theverge.com/rss/index.xml"},
+    {"name": "The Verge", "type": "rss", "url": "https://www.theverge.com/rss/index.xml"},
     {"name": "Ars Technica", "type": "rss", "url": "https://feeds.arstechnica.com/arstechnica/index"},
-    {"name": "TechCrunch",   "type": "rss", "url": "https://techcrunch.com/feed/"}
+    {"name": "TechCrunch", "type": "rss", "url": "https://techcrunch.com/feed/"},
+    {"name": "الجزيرة نت", "type": "html", "url": "https://www.ajnet.me/%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A7/"},
+    {"name": "اليوم السابع", "type": "html", "url": "https://m.youm7.com/Section/%D8%B9%D9%84%D9%88%D9%85-%D9%88-%D8%AA%D9%83%D9%86%D9%88%D9%84%D9%88%D8%AC%D9%8A%D8%A7/328/1"},
+    {"name": "المصري اليوم", "type": "html", "url": "https://www.almasryalyoum.com/section/index/9"},
+    {"name": "Wired", "type": "rss", "url": "https://www.wired.com/feed/rss"},
+    {"name": "Engadget", "type": "rss", "url": "https://www.engadget.com/rss.xml"},
+    {"name": "TechRadar", "type": "rss", "url": "https://www.techradar.com/rss"},
+    {"name": "Android Authority", "type": "rss", "url": "https://www.androidauthority.com/feed/"},
+    {"name": "9to5Mac", "type": "rss", "url": "https://9to5mac.com/feed/"},
+    {"name": "Guardian Technology", "type": "rss", "url": "https://www.theguardian.com/uk/technology/rss"}
   ],
   "ألعاب": [
-    {"name": "IGN",       "type": "rss", "url": "https://feeds.ign.com/ign/games-all"},
-    {"name": "GameSpot",  "type": "rss", "url": "https://www.gamespot.com/feeds/news/"},
-    {"name": "Eurogamer", "type": "rss", "url": "https://www.eurogamer.net/feed"}
+    {"name": "IGN", "type": "rss", "url": "https://feeds.ign.com/ign/games-all"},
+    {"name": "GameSpot", "type": "rss", "url": "https://www.gamespot.com/feeds/news/"},
+    {"name": "Eurogamer", "type": "rss", "url": "https://www.eurogamer.net/feed"},
+    {"name": "PC Gamer", "type": "rss", "url": "https://www.pcgamer.com/rss/"},
+    {"name": "Kotaku", "type": "rss", "url": "https://kotaku.com/rss"},
+    {"name": "Polygon", "type": "rss", "url": "https://www.polygon.com/rss/index.xml"},
+    {"name": "Rock Paper Shotgun", "type": "rss", "url": "https://www.rockpapershotgun.com/feed/"},
+    {"name": "GamesRadar", "type": "rss", "url": "https://www.gamesradar.com/feeds.xml"},
+    {"name": "Guardian Games", "type": "rss", "url": "https://www.theguardian.com/games/rss"},
+    {"name": "Ars Technica Gaming", "type": "rss", "url": "https://feeds.arstechnica.com/arstechnica/gaming/"},
+    {"name": "Xbox Wire", "type": "rss", "url": "https://news.xbox.com/en-us/feed/"},
+    {"name": "PlayStation Blog", "type": "rss", "url": "http://feeds.feedburner.com/PSBlog"}
   ],
   "سفر": [
-    {"name": "Skift",              "type": "rss", "url": "https://skift.com/feed/"},
-    {"name": "Atlas Obscura",     "type": "rss", "url": "https://www.atlasobscura.com/feeds/latest"},
-    {"name": "Conde Nast Traveler", "type": "rss", "url": "https://www.cntraveler.com/feed/rss"}
+    {"name": "Skift", "type": "rss", "url": "https://skift.com/feed/"},
+    {"name": "Atlas Obscura", "type": "rss", "url": "https://www.atlasobscura.com/feeds/latest"},
+    {"name": "Conde Nast Traveler", "type": "rss", "url": "https://www.cntraveler.com/feed/rss"},
+    {"name": "الجزيرة نت", "type": "html", "url": "https://www.ajnet.me/travel"},
+    {"name": "المصري اليوم", "type": "html", "url": "https://www.almasryalyoum.com/section/index/22"},
+    {"name": "Guardian Travel", "type": "rss", "url": "https://www.theguardian.com/uk/travel/rss"},
+    {"name": "Smithsonian Travel", "type": "rss", "url": "https://www.smithsonianmag.com/rss/travel/"},
+    {"name": "The Points Guy", "type": "rss", "url": "https://thepointsguy.com/feed/"},
+    {"name": "Nomadic Matt", "type": "rss", "url": "https://www.nomadicmatt.com/feed/"},
+    {"name": "Travel + Leisure", "type": "rss", "url": "https://www.travelandleisure.com/rss"},
+    {"name": "Culture Trip", "type": "rss", "url": "https://theculturetrip.com/feed/"},
+    {"name": "Simple Flying", "type": "rss", "url": "https://simpleflying.com/feed/"}
   ],
   "فن": [
     {"name": "Hyperallergic", "type": "rss", "url": "https://hyperallergic.com/feed/"},
-    {"name": "Colossal",      "type": "rss", "url": "https://www.thisiscolossal.com/feed/"}
+    {"name": "Colossal", "type": "rss", "url": "https://www.thisiscolossal.com/feed/"},
+    {"name": "اليوم السابع", "type": "html", "url": "https://m.youm7.com/Section/%D9%81%D9%86/48/1"},
+    {"name": "المصري اليوم", "type": "html", "url": "https://www.almasryalyoum.com/section/index/10"},
+    {"name": "Artnet News", "type": "rss", "url": "https://news.artnet.com/feed"},
+    {"name": "ARTnews", "type": "rss", "url": "https://www.artnews.com/feed/"},
+    {"name": "Guardian Art", "type": "rss", "url": "https://www.theguardian.com/artanddesign/rss"},
+    {"name": "Dezeen", "type": "rss", "url": "https://www.dezeen.com/feed/"},
+    {"name": "Creative Boom", "type": "rss", "url": "https://www.creativeboom.com/feed/"},
+    {"name": "Designboom", "type": "rss", "url": "https://www.designboom.com/feed/"},
+    {"name": "My Modern Met", "type": "rss", "url": "https://mymodernmet.com/feed/"},
+    {"name": "Smithsonian Arts", "type": "rss", "url": "https://www.smithsonianmag.com/rss/arts-culture/"}
   ],
   "طعام": [
-    {"name": "Eater",       "type": "rss", "url": "https://www.eater.com/rss/index.xml"},
-    {"name": "Serious Eats","type": "rss", "url": "https://www.seriouseats.com/feeds/serious-eats"}
+    {"name": "Eater", "type": "rss", "url": "https://www.eater.com/rss/index.xml"},
+    {"name": "Serious Eats", "type": "rss", "url": "https://www.seriouseats.com/feeds/serious-eats"},
+    {"name": "Bon Appétit", "type": "rss", "url": "https://www.bonappetit.com/feed/rss"},
+    {"name": "The Kitchn", "type": "rss", "url": "https://www.thekitchn.com/main.rss"},
+    {"name": "Smitten Kitchen", "type": "rss", "url": "http://feeds.feedburner.com/smittenkitchen"},
+    {"name": "Budget Bytes", "type": "rss", "url": "https://www.budgetbytes.com/feed/"},
+    {"name": "Minimalist Baker", "type": "rss", "url": "https://minimalistbaker.com/feed/"},
+    {"name": "Love and Lemons", "type": "rss", "url": "https://www.loveandlemons.com/feed/"},
+    {"name": "Guardian Food", "type": "rss", "url": "https://www.theguardian.com/food/rss"},
+    {"name": "NPR Food", "type": "rss", "url": "https://feeds.npr.org/1053/rss.xml"},
+    {"name": "Just One Cookbook", "type": "rss", "url": "https://www.justonecookbook.com/feed/"},
+    {"name": "Skinnytaste", "type": "rss", "url": "https://www.skinnytaste.com/feed/"}
   ],
   "اقتصاد": [
     {"name": "BBC Business", "type": "rss", "url": "https://feeds.bbci.co.uk/news/business/rss.xml"},
-    {"name": "CNBC",         "type": "rss", "url": "https://www.cnbc.com/id/10001147/device/rss/rss.html"}
+    {"name": "CNBC", "type": "rss", "url": "https://www.cnbc.com/id/10001147/device/rss/rss.html"},
+    {"name": "اليوم السابع", "type": "html", "url": "https://m.youm7.com/Section/%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1-%D9%88%D8%A3%D8%B3%D9%88%D8%A7%D9%82/358/1"},
+    {"name": "المصري اليوم", "type": "html", "url": "https://www.almasryalyoum.com/section/index/4"},
+    {"name": "Guardian Business", "type": "rss", "url": "https://www.theguardian.com/uk/business/rss"},
+    {"name": "CNBC Economy", "type": "rss", "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html"},
+    {"name": "CNBC Top News", "type": "rss", "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html"},
+    {"name": "MarketWatch", "type": "rss", "url": "https://feeds.marketwatch.com/marketwatch/topstories"},
+    {"name": "Yahoo Finance", "type": "rss", "url": "https://finance.yahoo.com/news/rssindex"},
+    {"name": "Sky News Business", "type": "rss", "url": "https://feeds.skynews.com/feeds/rss/business.xml"},
+    {"name": "Investing.com", "type": "rss", "url": "https://www.investing.com/rss/news_14.rss"},
+    {"name": "NPR Business", "type": "rss", "url": "https://feeds.npr.org/1006/rss.xml"}
   ]
 }
