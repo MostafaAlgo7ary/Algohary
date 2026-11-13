@@ -1,9 +1,8 @@
 """كتابة المقال ثم مراجعته لغويًا بنماذج Groq مع تبديل تلقائي بين النماذج."""
 import json
 import re
-import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 import groq
 from groq import Groq
@@ -55,7 +54,7 @@ def _model_chain():
     # لو الاكتشاف نجح، تجاهل النماذج المعدّة غير الموجودة أصلًا في حسابك
     if _discovered:
         chain = [m for m in chain if m in _discovered]
-    return [m for m in chain if m not in _dead]
+    return [m for m in chain if m not in _dead and m not in config.GROQ_EXCLUDE]
 
 
 def _parse_wait(e):
@@ -154,14 +153,9 @@ def _valid(res):
 
 
 def _race(chain, system, user, temperature, max_tokens, check):
-    """يرسل الطلب لكل النماذج في وقت واحد ويعيد أول رد صالح (الباقي يُهمل)."""
-    stop = threading.Event()
-
-    def run(rank, model):
-        if rank and config.LLM_STAGGER:
-            time.sleep(rank * config.LLM_STAGGER)
-        if stop.is_set():
-            return None
+    """يجرّب النماذج بالترتيب بتغطية سريعة: الأول وحده، فإن فشل أو تأخر يبدأ التالي معه، وأول رد صالح يفوز.
+    هكذا لا نحرق الحصة بإرسال الطلب لكل النماذج معًا."""
+    def run(model):
         try:
             res = _call(model, system, user, temperature, max_tokens)
             if check and not check(res):
@@ -174,28 +168,39 @@ def _race(chain, system, user, temperature, max_tokens, check):
             raise
 
     ex = ThreadPoolExecutor(max_workers=len(chain))
-    futs = {ex.submit(run, i, m): m for i, m in enumerate(chain)}
-    last = None
+    queue, pending, last, last_launch = list(chain), {}, None, 0.0
     try:
-        for fut in as_completed(futs):
-            try:
-                res = fut.result()
-            except LLMUnavailable:
-                raise
-            except Exception as e:
-                last = e
-                continue
-            if res is not None:
-                print(f"   🏁 أسرع رد صالح: {futs[fut]} (من {len(chain)} نماذج بالتوازي)")
-                return res, None
+        while queue or pending:
+            while queue and _cooldown.get(queue[0], 0) > time.monotonic():
+                queue.pop(0)   # دخل فترة انتظار أثناء السباق
+            if queue and (not pending or time.monotonic() - last_launch >= config.LLM_HEDGE_SECONDS):
+                m = queue.pop(0)
+                pending[ex.submit(run, m)] = m
+                last_launch = time.monotonic()
+            if not pending:
+                break
+            timeout = (max(0.1, config.LLM_HEDGE_SECONDS - (time.monotonic() - last_launch))
+                       if queue else None)
+            done, _ = wait(list(pending), timeout=timeout, return_when=FIRST_COMPLETED)
+            for fut in done:
+                m = pending.pop(fut)
+                try:
+                    res = fut.result()
+                except LLMUnavailable:
+                    raise
+                except Exception as e:
+                    last = e
+                    continue
+                if res is not None:
+                    print(f"   🏁 رد صالح من: {m}")
+                    return res, None
     finally:
-        stop.set()
         ex.shutdown(wait=False, cancel_futures=True)
     return None, last
 
 
 def _chat(system, user, temperature, max_tokens=None, check=_valid):
-    """يرسل لكل النماذج المتاحة بالتوازي ويأخذ أسرع رد صالح. عند امتلاء الحدود ينتظر قليلًا ثم يعيد."""
+    """يجرّب النماذج المتاحة (بتغطية سريعة) ويأخذ أول رد صالح. عند امتلاء الحدود ينتظر قليلًا ثم يعيد."""
     last = None
     deadline = time.monotonic() + config.LLM_TOTAL_WAIT
     for _ in range(config.LLM_PASSES):
