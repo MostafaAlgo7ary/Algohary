@@ -131,6 +131,7 @@ def build_article(item, section, glossary):
     if target > config.MAX_WORDS:
         return None, f"مقال المصدر طويل جدًا ({target} كلمة)"
     print(f"   📏 طول المصدر = الطول المطلوب: {target} كلمة")
+    print(f"   🔎 يبدأ المصدر: {text[:70]} … ينتهي: {text[-70:]}")
 
     k = config.SUBHEADINGS
     gloss_rows = writer.glossary_text(glossary, source_text)
