@@ -343,14 +343,55 @@ def proofread(article, gloss_rows="لا يوجد"):
     return _merge(article, fixed)
 
 
-def revise(article, target, problems, gloss_rows="لا يوجد"):
+EXTEND_SYSTEM = """أنت محرر عربي. أمامك مقال ومادة المصدر. اكتب فقرات قصيرة إضافية تُلحق بنهاية المقال، بمعلومات حقيقية من المادة لم يغطها المقال بعد (بلا اختلاق وبلا تكرار لما كُتب)، بالعربية الفصحى وبصياغة أصلية لا حرفية، وبلا ذكر للمصدر وبلا خاتمة.
+الأسماء بالعربية وفق القاموس، بلا حروف لاتينية، ولا تستخدم «تم/يتم» ولا «قام بـ». كل فقرة بين 40 و60 كلمة، ونقطة واحدة في نهايتها فقط (استخدم ؛ أو ، داخل الفقرة). عدد الكلمات المطلوب هو مجموع كلمات الفقرات المذكور في رسالة المستخدم، التزم به بدقة.
+أعد JSON فقط بهذا الشكل: {"paragraphs": ["فقرة", "فقرة"]}"""
+
+
+def _valid_extra(res):
+    return (isinstance(res, dict) and isinstance(res.get("paragraphs"), list)
+            and any(isinstance(p, str) and p.strip() for p in res["paragraphs"]))
+
+
+def extend(article, need, source_text, gloss_rows="لا يوجد"):
+    """يطلب فقرات إضافية مجموع كلماتها need تقريبًا، لسد نقص طول المقال. يعيد قائمة فقرات."""
+    k = max(1, round(need / 55))
+    body = "\n".join(p for p in arabic_check.body_parts(article) if p)
+    user = (f"المطلوب إضافته: {need} كلمة بالضبط (مجموع كلمات الفقرات)، موزعة على {k} فقرة.\n\n"
+            f"القاموس الإلزامي للأسماء:\n{gloss_rows}\n\n"
+            f"المقال الحالي:\n{body}\n\nمادة المصدر:\n{source_text[:12000]}")
+    res = _chat(EXTEND_SYSTEM, user, temperature=0.3, max_tokens=_cap(need), check=_valid_extra)
+    return [p for p in res["paragraphs"] if isinstance(p, str) and p.strip()]
+
+
+REFIT_SYSTEM = """أنت محرر عربي دقيق في العدّ. ستتلقى فقرة واحدة قصيرة وعدد الكلمات المطلوب لها. أعد كتابتها بحيث يصبح عدد كلماتها هو العدد المطلوب بالضبط، بنفس المعنى والحقائق (عند الإضافة أضف تفصيلًا مفيدًا من المعنى نفسه دون اختلاق؛ وعند الحذف احذف الأقل أهمية)، بعربية فصحى سليمة وبلا «تم/يتم» ولا «قام بـ»، وبلا حروف لاتينية، ونقطة واحدة في نهايتها فقط (استخدم ؛ أو ، داخلها).
+الكلمة = أي مقطع يفصله فراغ ويحوي حرفًا أو رقمًا. عُدّ كلمة كلمة قبل الإرسال.
+أعد JSON فقط: {"paragraph": "النص"}"""
+
+
+def refit_paragraph(paragraph, want, have, gloss_rows="لا يوجد", feedback=None, context=""):
+    """يعيد كتابة فقرة واحدة لتصير want كلمة بالضبط (فقرة قصيرة يسهل عدّها)."""
+    user = (f"الفقرة الحالية ({have} كلمة):\n{paragraph}\n\n"
+            f"عدد الكلمات المطلوب: {want} بالضبط.\n")
+    if feedback:
+        user += f"ملاحظة من المحاولة السابقة: {feedback}\n"
+    user += f"\nالقاموس الإلزامي للأسماء:\n{gloss_rows}\n\nسياق المقال (للفهم فقط):\n{context[:1500]}"
+    res = _chat(REFIT_SYSTEM, user, temperature=0.2, max_tokens=_cap(want),
+                check=lambda r: isinstance(r, dict) and isinstance(r.get("paragraph"), str) and r["paragraph"].strip())
+    return res["paragraph"]
+
+
+def revise(article, target, problems, gloss_rows="لا يوجد", with_length=True):
     """جولة ضبط: يصلح الطول والصياغة الحرفية والسيو بأقل تغيير ممكن."""
     system = REVISE_SYSTEM.format(tmax=config.TITLE_MAX, dmax=config.DESCRIPTION_MAX)
     material = json.dumps(article, ensure_ascii=False)
-    tol = max(config.WORD_TOLERANCE, round(target * config.WORD_TOLERANCE_PCT / 100))
-    user = (f"الطول المطلوب: {target} كلمة" + (f" (يُقبل ±{tol})" if tol else " بالضبط") + ".\n"
-            f"عدد الكلمات الحالي: {arabic_check.article_words(article)}.\n\n"
-            f"عدد كلمات كل جزء حاليًا:\n{arabic_check.word_report(article)}\n\n"
+    if with_length:
+        head = (f"الطول المطلوب: {target} كلمة بالضبط.\n"
+                f"عدد الكلمات الحالي: {arabic_check.article_words(article)}.\n\n"
+                f"عدد كلمات كل جزء حاليًا:\n{arabic_check.word_report(article)}\n\n")
+    else:
+        head = "ضبط الطول يتم آليًا لاحقًا: لا تتعمد زيادة النص أو تقليصه، وركّز على المشكلات التالية فقط.\n\n"
+    user = (head +
             "المشكلات المطلوب إصلاحها:\n- " + "\n- ".join(problems) +
             f"\n\nالقاموس الإلزامي للأسماء:\n{gloss_rows}\n\nالمقال:\n{material}")
     return _merge(article, _chat(system, user, temperature=0.2, max_tokens=_cap(target)))
