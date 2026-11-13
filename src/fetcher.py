@@ -1,4 +1,5 @@
 """جلب أخبار المصادر. المصادر تُستخدم كـ«خيوط أخبار» فقط: نأخذ منها الحقائق ولا ننسخ نصّها."""
+import json
 import re
 import xml.etree.ElementTree as ET
 from urllib.parse import urljoin, urlparse
@@ -126,16 +127,85 @@ def fetch_candidates(section_label, sources_cfg):
 
 
 # ---------- نص الخبر (للحقائق فقط) ----------
+_NOISE_CLASS = re.compile(
+    r"(?:^|[-_\s])(related|recommend\w*|share|sharing|social|comments?|newsletter|promo\w*|widget|sidebar|"
+    r"breadcrumbs?|advert\w*|ads?|banner|tags?|trending|popular|latest|subscribe|follow|byline|author|"
+    r"read-?also|more-stories|outbrain|taboola)(?:$|[-_\s])", re.I)
+_BOILER = re.compile(
+    r"المصدر المفضل|المصادر المفضلة|تابع أخبار|اقرأ أيضا|اقرأ أيضًا|اقرأ ايضا|شاهد أيضا|الإضافة إلى|"
+    r"Read more|Read also|Sign up|Subscribe|newsletter|جميع الحقوق|حقوق النشر|All rights reserved|اشترك", re.I)
+
+
+def _ld_article_body(soup):
+    """نص المقال من بيانات schema.org (articleBody) إن وُجدت: أدق مصدر لجسم الخبر."""
+    for sc in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(sc.string or sc.get_text())
+        except Exception:
+            continue
+        stack = [data]
+        while stack:
+            x = stack.pop()
+            if isinstance(x, dict):
+                body = x.get("articleBody")
+                if isinstance(body, str) and len(body.split()) >= 80:
+                    return _clean(BeautifulSoup(body, "html.parser").get_text(" "))
+                stack.extend(x.values())
+            elif isinstance(x, list):
+                stack.extend(x)
+    return ""
+
+
+def _good_paragraph(p):
+    """نص الفقرة إن كانت من جسم الخبر (لا روابط ولا إعلانات ولا عبارات «اقرأ أيضًا»)."""
+    t = _clean(p.get_text(" "))
+    if len(t) <= 40 or _BOILER.search(t):
+        return None
+    if sum(len(a.get_text()) for a in p.find_all("a")) / len(t) > 0.6:
+        return None
+    return t
+
+
 def fetch_article_text(url, limit=None):
+    """جسم الخبر فقط (بلا القوائم والمقالات ذات الصلة والإعلانات): نعدّ كلماته لتحديد طول مقالنا."""
     try:
         soup = BeautifulSoup(_get(url).content, "html.parser")
     except Exception as e:
         print(f"⚠️ تعذّر جلب الخبر: {e}")
         return ""
-    for t in soup(["script", "style", "nav", "footer", "aside", "form"]):
-        t.decompose()
-    paras = [_clean(p.get_text(" ")) for p in soup.find_all("p")]
-    text = " ".join(p for p in paras if len(p) > 40)
+    text = _ld_article_body(soup)
+    if not text:
+        for t in soup(["script", "style", "nav", "footer", "aside", "form", "noscript",
+                       "figcaption", "button", "header"]):
+            t.decompose()
+        for el in list(soup.find_all(True)):
+            if getattr(el, "decomposed", False) or not el.attrs:
+                continue
+            marks = " ".join(el.get("class", [])) + " " + (el.get("id") or "")
+            if _NOISE_CLASS.search(marks):
+                el.decompose()
+        scope = soup
+        arts = [a for a in soup.find_all("article")
+                if sum(len(_good_paragraph(p) or "") for p in a.find_all("p")) > 300]
+        if arts:   # أكبر <article> نصًّا
+            scope = max(arts, key=lambda a: sum(len(_good_paragraph(p) or "") for p in a.find_all("p")))
+        groups = {}
+        for p in scope.find_all("p"):
+            t = _good_paragraph(p)
+            if t:
+                groups.setdefault(id(p.parent), [p.parent, 0])[1] += len(t)
+        if groups:
+            best = max(groups.values(), key=lambda g: g[1])[0]
+            cls = best.get("class")
+            ok = {k for k, (par, _) in groups.items()
+                  if par is best or (cls and par.get("class") == cls)}   # أجزاء الجسم المتفرقة بنفس الصنف
+            seen, paras = set(), []
+            for p in scope.find_all("p"):
+                t = _good_paragraph(p)
+                if t and id(p.parent) in ok and t not in seen:
+                    seen.add(t)
+                    paras.append(t)
+            text = " ".join(paras)
     return text[:limit] if limit else text   # النص كاملًا افتراضيًا: نحتاجه لحساب طول المصدر
 
 
