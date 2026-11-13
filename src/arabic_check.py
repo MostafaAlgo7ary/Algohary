@@ -1,4 +1,5 @@
 """تنظيف النص العربي والتحقق منه: الأسماء، الصياغات المترجمة حرفيًا، السيو، وعدد الكلمات."""
+import copy
 import math
 import re
 
@@ -118,12 +119,15 @@ def split_long(paragraph):
     if words <= PARAGRAPH_SPLIT:
         return [paragraph]
     best = None
-    for m in re.finditer(r"؛ ", paragraph):
-        left = count_words(paragraph[:m.start()])
-        if left >= 15 and words - left >= 15:
-            score = abs(left - words / 2)
-            if best is None or score < best[0]:
-                best = (score, m)
+    for sep in ("؛ ", "، "):   # الأفضل حدود الجمل «؛»، وإلا الفواصل
+        for m in re.finditer(sep, paragraph):
+            left = count_words(paragraph[:m.start()])
+            if left >= 15 and words - left >= 15:
+                score = abs(left - words / 2)
+                if best is None or score < best[0]:
+                    best = (score, m)
+        if best:
+            break
     if not best:
         return [paragraph]
     m = best[1]
@@ -192,6 +196,107 @@ def clean_article(article, glossary, subheadings=None):
         a["intro"] = intro_parts[0]
         a["sections"][0]["paragraphs"] = intro_parts[1:] + a["sections"][0]["paragraphs"]
     return repair_seo(a)
+
+
+# ======================================================================
+# ضبط الطول بالكود (بدون نموذج): حذف الزائد وإضافة الناقص بالكلمة
+# ======================================================================
+_FILLERS = ("أيضا", "كذلك", "بالفعل", "فعليا", "تماما", "للغاية", "جدا", "حقا")
+
+
+def _remove_fillers(a, over):
+    """يحذف كلمات الحشو (كلمة لكل حذف) من آخر الفقرات لأولها حتى يزول الزائد. يعيد الزائد المتبقي."""
+    for s in reversed(a["sections"]):
+        for i in range(len(s["paragraphs"]) - 1, -1, -1):
+            p = s["paragraphs"][i]
+            for f in _FILLERS:
+                rx = re.compile(r"(?<![\u0600-\u06FF])" + f + r"(?![\u0600-\u06FF])\s?")
+                while over > 0 and rx.search(p):
+                    p = rx.sub("", p, count=1)
+                    over -= 1
+            s["paragraphs"][i] = re.sub(r"\s+", " ", p).strip()
+    return over
+
+
+def trim_to(article, target):
+    """يقلّص المقال إلى target كلمة بأقل ضرر: الحشو، ثم آخر فقرة كاملة، ثم العبارات الختامية للفقرات
+    (ما بعد آخر فاصلة)، ثم الحشو مجددًا."""
+    a = copy.deepcopy(article)
+    over = article_words(a) - target
+    if over <= 0:
+        return a
+    over = _remove_fillers(a, over)
+    for _ in range(80):
+        if over <= 0:
+            break
+        last = a["sections"][-1] if a["sections"] else None
+        if last and len(last["paragraphs"]) > 1:
+            w = count_words(last["paragraphs"][-1])
+            if w <= over:
+                last["paragraphs"].pop()
+                over -= w
+                continue
+        best = None
+        for s in a["sections"]:
+            for i, p in enumerate(s["paragraphs"]):
+                body = p.rstrip(".؟! ")
+                cut = max(body.rfind("، "), body.rfind("؛ "))
+                if cut <= 0:
+                    continue
+                w = count_words(body[cut + 2:])
+                if 0 < w <= over and (best is None or w >= best[0]):
+                    best = (w, s, i, cut)
+        if not best:
+            break
+        w, s, i, cut = best
+        body = s["paragraphs"][i].rstrip(".؟! ")
+        s["paragraphs"][i] = body[:cut].rstrip("،؛ ") + "."
+        over -= w
+    if over > 0:
+        _remove_fillers(a, over)
+    return a
+
+
+def pad_to(article, target):
+    """نقص بسيط (حتى 3 كلمات): كلمة «كذلك» في بداية فقرات من آخر المقال."""
+    a = copy.deepcopy(article)
+    need = target - article_words(a)
+    if need <= 0 or need > 3:
+        return a
+    for s in reversed(a["sections"]):
+        for i in range(len(s["paragraphs"]) - 1, -1, -1):
+            if need > 0 and not s["paragraphs"][i].startswith("كذلك"):
+                s["paragraphs"][i] = "كذلك " + s["paragraphs"][i]
+                need -= 1
+    return a
+
+
+def clean_paragraph(text, glossary):
+    """تنظيف فقرة واحدة (قاموس + تطبيع + نقطة واحدة في النهاية + قسمة الطويل). يعيد قائمة فقرات."""
+    return split_long(single_stop(normalize(apply_glossary(text, glossary))))
+
+
+def append_paragraphs(article, paragraphs, glossary):
+    """يلحق فقرات جديدة (بعد تنظيفها) بآخر قسم."""
+    a = copy.deepcopy(article)
+    if not a["sections"]:
+        return a
+    for p in paragraphs:
+        if isinstance(p, str) and p.strip():
+            a["sections"][-1]["paragraphs"].extend(clean_paragraph(p, glossary))
+    return a
+
+
+def replace_paragraph(article, section_idx, para_idx, new_paragraphs):
+    a = copy.deepcopy(article)
+    paras = a["sections"][section_idx]["paragraphs"]
+    paras[para_idx:para_idx + 1] = new_paragraphs
+    return a
+
+
+def length_tolerance(config, target):
+    return max(getattr(config, "WORD_TOLERANCE", 0),
+               round(target * getattr(config, "WORD_TOLERANCE_PCT", 0) / 100))
 
 
 # ======================================================================
@@ -363,9 +468,7 @@ def validate(article, allowed_latin, config, target=None, source_name=None, glos
     # الطول المطلوب = طول مقال المصدر
     if target:
         n = article_words(article)
-        tol = max(getattr(config, "WORD_TOLERANCE", 0),
-                  round(target * getattr(config, "WORD_TOLERANCE_PCT", 0) / 100))
-        if abs(n - target) > tol:
+        if abs(n - target) > length_tolerance(config, target):
             verb = "احذف" if n > target else "أضف"
             problems.append(f"عدد كلمات المقال {n} والمطلوب {target} بالضبط: {verb} {abs(n - target)} كلمة")
 
