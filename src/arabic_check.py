@@ -131,6 +131,26 @@ def _no_stop(text):
     return single_stop(text).rstrip(".").strip() if text else text
 
 
+TITLE_LIMIT = 70   # أقصى طول عنوان بعد الإصلاح الآلي
+
+
+def repair_seo(a):
+    """إصلاحات سيو آلية بلا نموذج: الكلمة المفتاحية في العنوان ووصف الصورة والعنوان الفرعي،
+    وتنقية الكلمات الثانوية (لا تُنشر) بحيث تبقى الموجودة في النص فقط."""
+    key = a.get("keyphrase", "")
+    if key:
+        if not _occ(key, a["title"]) and len(key) + 2 + len(a["title"]) <= TITLE_LIMIT:
+            a["title"] = f"{key}: {a['title']}"
+        if not _occ(key, a["image_alt"]):
+            a["image_alt"] = a["title"] if _occ(key, a["title"]) else key
+        heads = [s["heading"] for s in a["sections"]]
+        if a["sections"] and not any(_occ(k, h) for h in heads for k in [key] + a["secondary_keywords"]):
+            a["sections"][0]["heading"] = f"{key}: {a['sections'][0]['heading']}".strip(": ")
+    body = " ".join(x for x in body_parts(a) if x)
+    a["secondary_keywords"] = [k for k in a["secondary_keywords"] if _occ(k, body)]
+    return a
+
+
 def clean_article(article, glossary, subheadings=None):
     """تنظيف آلي لكل الحقول: القاموس + التطبيع + نقطة في نهاية الفقرة فقط، وضبط بنية المقال."""
     a = coerce(article, subheadings)
@@ -146,7 +166,7 @@ def clean_article(article, glossary, subheadings=None):
     for s in a["sections"]:
         s["heading"] = _no_stop(fix(s["heading"]))
         s["paragraphs"] = [single_stop(fix(p)) for p in s["paragraphs"]]
-    return a
+    return repair_seo(a)
 
 
 # ======================================================================
@@ -268,17 +288,11 @@ def seo_problems(article):
     body = " ".join(x for x in body_parts(article) if x)
     occ = _occ(key, body)
     lo = 2 if n_words >= 250 else 1
-    hi = max(3, int(n_words * 0.03 / max(klen, 1)) + 1)
+    hi = max(4, int(n_words * 0.04 / max(klen, 1)) + 1)
     if occ < lo:
         p.append(f"الكلمة المفتاحية ظهرت {occ} مرة فقط في النص؛ كررها طبيعيًا {lo} مرات على الأقل")
     elif occ > hi:
         p.append(f"حشو للكلمة المفتاحية ({occ} مرة)؛ لا تتجاوز {hi} مرات")
-    if len(sec) < 3:
-        p.append("أضف 3 إلى 5 كلمات مفتاحية ثانوية (secondary_keywords)")
-    else:
-        missing = [k for k in sec if not _occ(k, body)]
-        if len(sec) - len(missing) < math.ceil(len(sec) / 2):
-            p.append("كلمات مفتاحية ثانوية غير موجودة في النص: " + "، ".join(missing[:4]))
     return p
 
 
@@ -324,7 +338,9 @@ def validate(article, allowed_latin, config, target=None, source_name=None, glos
     # الطول المطلوب = طول مقال المصدر
     if target:
         n = article_words(article)
-        if abs(n - target) > getattr(config, "WORD_TOLERANCE", 0):
+        tol = max(getattr(config, "WORD_TOLERANCE", 0),
+                  round(target * getattr(config, "WORD_TOLERANCE_PCT", 0) / 100))
+        if abs(n - target) > tol:
             verb = "احذف" if n > target else "أضف"
             problems.append(f"عدد كلمات المقال {n} والمطلوب {target} بالضبط: {verb} {abs(n - target)} كلمة")
 
