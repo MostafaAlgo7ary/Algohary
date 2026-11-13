@@ -115,10 +115,26 @@ def fetch_html_listing(source):
     return items[:40]
 
 
+def fetch_nav_section(source):
+    """مصدر type=nav: نفتح الصفحة الرئيسية ونبحث في روابطها عن قسم باسم من source["labels"] (بالترتيب)،
+    ثم نقرأ صفحة القسم كصفحة قائمة. هكذا لا نحتاج رابط القسم الدقيق."""
+    home = source["url"]
+    soup = BeautifulSoup(_get(home).content, "html.parser")
+    links = [(_clean(a.get_text(" ")), urljoin(home, a["href"]).split("#")[0])
+             for a in soup.find_all("a", href=True)]
+    for label in source.get("labels", []):
+        for text, url in links:
+            if text == label and url.rstrip("/") != home.rstrip("/") and not url.startswith("javascript"):
+                print(f"ℹ️ {source['name']}: قسم «{label}» → {url}")
+                return fetch_html_listing({**source, "url": url})
+    print(f"⚠️ {source['name']}: لم نجد قسمًا بالأسماء {source.get('labels')} في قائمة الموقع")
+    return []
+
+
 def fetch_candidates(section_label, sources_cfg):
     out = []
     for source in sources_cfg.get(section_label, []):
-        fn = fetch_rss if source["type"] == "rss" else fetch_html_listing
+        fn = {"rss": fetch_rss, "nav": fetch_nav_section}.get(source["type"], fetch_html_listing)
         try:
             out.extend(fn(source))
         except Exception as e:   # مصدر واحد معطل لا يُسقط القسم كله
