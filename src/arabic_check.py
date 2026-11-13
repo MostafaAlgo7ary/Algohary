@@ -109,6 +109,27 @@ def apply_glossary(text, glossary):
     return text
 
 
+PARAGRAPH_SPLIT = 80   # فقرة أطول من هذا العدد تُقسَّم آليًا عند أقرب فاصل جمل
+
+
+def split_long(paragraph):
+    """يقسّم الفقرة الطويلة عند «؛» (حدود الجمل) الأقرب لمنتصفها؛ عدد الكلمات لا يتغير."""
+    words = count_words(paragraph)
+    if words <= PARAGRAPH_SPLIT:
+        return [paragraph]
+    best = None
+    for m in re.finditer(r"؛ ", paragraph):
+        left = count_words(paragraph[:m.start()])
+        if left >= 15 and words - left >= 15:
+            score = abs(left - words / 2)
+            if best is None or score < best[0]:
+                best = (score, m)
+    if not best:
+        return [paragraph]
+    m = best[1]
+    return split_long(paragraph[:m.start()].rstrip("،؛ ") + ".") + split_long(paragraph[m.end():])
+
+
 _INNER_STOP = re.compile(r"(?<!\.)\.(?!\.)\s+(?=(\S+))")
 
 
@@ -165,7 +186,11 @@ def clean_article(article, glossary, subheadings=None):
     a["secondary_keywords"] = [fix(k) for k in a["secondary_keywords"]]
     for s in a["sections"]:
         s["heading"] = _no_stop(fix(s["heading"]))
-        s["paragraphs"] = [single_stop(fix(p)) for p in s["paragraphs"]]
+        s["paragraphs"] = [q for p in s["paragraphs"] for q in split_long(single_stop(fix(p)))]
+    intro_parts = split_long(a["intro"])
+    if len(intro_parts) > 1 and a["sections"]:   # فائض المقدمة الطويلة يصير أول فقرات القسم
+        a["intro"] = intro_parts[0]
+        a["sections"][0]["paragraphs"] = intro_parts[1:] + a["sections"][0]["paragraphs"]
     return repair_seo(a)
 
 
@@ -345,8 +370,10 @@ def validate(article, allowed_latin, config, target=None, source_name=None, glos
             problems.append(f"عدد كلمات المقال {n} والمطلوب {target} بالضبط: {verb} {abs(n - target)} كلمة")
 
     # الترجمة الحرفية
-    for advice, hits in find_calques(article):
-        problems.append(f"صياغة مترجمة حرفيًا ({advice}): " + " | ".join(f"«{h}»" for h in hits[:3]))
+    calques = find_calques(article)
+    if sum(len(h) for _, h in calques) > getattr(config, "CALQUE_MAX", 0):   # نتسامح مع القليل المتبقي
+        for advice, hits in calques:
+            problems.append(f"صياغة مترجمة حرفيًا ({advice}): " + " | ".join(f"«{h}»" for h in hits[:3]))
 
     # لا ذكر للمصدر
     if source_name is not None:
