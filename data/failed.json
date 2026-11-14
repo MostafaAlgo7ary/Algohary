@@ -229,5 +229,26 @@
     "section": "طعام",
     "reason": "مقال المصدر قصير جدًا (0 كلمة)",
     "failed_at": "2026-11-13 10:24:10 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/news/1033489/faa-ground-stop",
+    "source": "The Verge",
+    "section": "تقنية",
+    "reason": "كلمات لاتينية غير مسموحة: L3Harris",
+    "failed_at": "2026-11-14 07:16:50 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/space/2026/11/starship-flight-15-powers-to-orbit-setting-up-a-possible-catch-on-saturday/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-14 07:16:50 UTC"
+  },
+  {
+    "link": "https://techcrunch.com/2026/11/13/amazons-new-kindle-colorsoft-is-a-premium-e-reader-with-a-premium-price/",
+    "source": "TechCrunch",
+    "section": "تقنية",
+    "reason": "كلمات لاتينية غير مسموحة: microSD",
+    "failed_at": "2026-11-14 07:18:04 UTC"
   }
 ]
