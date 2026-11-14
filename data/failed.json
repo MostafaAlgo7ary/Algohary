@@ -250,5 +250,19 @@
     "section": "تقنية",
     "reason": "كلمات لاتينية غير مسموحة: microSD",
     "failed_at": "2026-11-14 07:18:04 UTC"
+  },
+  {
+    "link": "https://hyperallergic.com/11-14-26-weekly-newsletter-2/",
+    "source": "Hyperallergic",
+    "section": "فن",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-14 23:33:41 UTC"
+  },
+  {
+    "link": "https://www.thisiscolossal.com/2026/11/the-sacred-ordinary-1504-birmingham-civil-rights/",
+    "source": "Colossal",
+    "section": "فن",
+    "reason": "مقال المصدر قصير جدًا (0 كلمة)",
+    "failed_at": "2026-11-14 23:33:41 UTC"
   }
 ]
