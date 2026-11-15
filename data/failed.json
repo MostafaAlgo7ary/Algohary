@@ -278,5 +278,26 @@
     "section": "طعام",
     "reason": "مقال المصدر قصير جدًا (0 كلمة)",
     "failed_at": "2026-11-15 04:00:10 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/entertainment/1034013/armand-hammers-snakes-ladders-review",
+    "source": "The Verge",
+    "section": "تقنية",
+    "reason": "كلمات لاتينية غير مسموحة: Golliwog, Graveside, Revelator؛ حشو للكلمة المفتاحية (6 مرة)؛ لا تتجاوز 4 مرات",
+    "failed_at": "2026-11-15 23:18:42 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/space/2026/11/vulcan-rocket-fails-during-launch-dealing-major-blow-to-spacex-competitors/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-15 23:18:43 UTC"
+  },
+  {
+    "link": "https://techcrunch.com/2026/11/15/is-bad-news-for-jensen-huang-also-bad-news-for-the-ai-industry/",
+    "source": "TechCrunch",
+    "section": "تقنية",
+    "reason": "مقال المصدر طويل جدًا (1263 كلمة)",
+    "failed_at": "2026-11-15 23:18:43 UTC"
   }
 ]
