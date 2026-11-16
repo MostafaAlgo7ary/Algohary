@@ -313,5 +313,19 @@
     "section": "ألعاب",
     "reason": "مادة المصدر قصيرة جدًا",
     "failed_at": "2026-11-16 04:00:09 UTC"
+  },
+  {
+    "link": "https://hyperallergic.com/why-is-the-whitney-museum-selling-a-de-kooning-painting/",
+    "source": "Hyperallergic",
+    "section": "فن",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-16 22:41:17 UTC"
+  },
+  {
+    "link": "https://www.thisiscolossal.com/2026/11/paper-trail-animal-don-hertzfeldt/",
+    "source": "Colossal",
+    "section": "فن",
+    "reason": "مقال المصدر قصير جدًا (0 كلمة)",
+    "failed_at": "2026-11-16 22:41:18 UTC"
   }
 ]
