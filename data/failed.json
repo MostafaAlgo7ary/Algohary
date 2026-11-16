@@ -299,5 +299,19 @@
     "section": "تقنية",
     "reason": "مقال المصدر طويل جدًا (1263 كلمة)",
     "failed_at": "2026-11-15 23:18:43 UTC"
+  },
+  {
+    "link": "https://www.ign.com/articles/best-deals-for-november-15-2026",
+    "source": "IGN",
+    "section": "ألعاب",
+    "reason": "مقال المصدر قصير جدًا (115 كلمة)",
+    "failed_at": "2026-11-16 04:00:09 UTC"
+  },
+  {
+    "link": "https://www.gamespot.com/articles/gta-6-is-like-the-olympics-a-rare-cultural-moment-with-massive-ripple-effects/",
+    "source": "GameSpot",
+    "section": "ألعاب",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-16 04:00:09 UTC"
   }
 ]
