@@ -334,5 +334,19 @@
     "section": "سفر",
     "reason": "مقال المصدر قصير جدًا (73 كلمة)",
     "failed_at": "2026-11-18 21:02:25 UTC"
+  },
+  {
+    "link": "https://hyperallergic.com/georgia-okeeffe-painting-found-in-nyc-closet-sells-for-4-9m/",
+    "source": "Hyperallergic",
+    "section": "فن",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-19 02:54:23 UTC"
+  },
+  {
+    "link": "https://www.thisiscolossal.com/2026/11/sylvain-lefebvre-oil-paintings-marbled-paper/",
+    "source": "Colossal",
+    "section": "فن",
+    "reason": "مقال المصدر قصير جدًا (0 كلمة)",
+    "failed_at": "2026-11-19 02:54:23 UTC"
   }
 ]
