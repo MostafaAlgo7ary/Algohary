@@ -355,5 +355,19 @@
     "section": "اقتصاد",
     "reason": "مقال المصدر طويل جدًا (1492 كلمة)",
     "failed_at": "2026-11-19 19:23:10 UTC"
+  },
+  {
+    "link": "https://www.ign.com/articles/gta-6-has-only-been-out-for-a-day-and-people-are-already-asking-take-twos-boss-about-gta-7",
+    "source": "IGN",
+    "section": "ألعاب",
+    "reason": "كلمات لاتينية غير مسموحة: TBPN",
+    "failed_at": "2026-11-20 18:11:57 UTC"
+  },
+  {
+    "link": "https://www.gamespot.com/articles/gta-6-is-crashing-on-some-ps5s-with-ce-108255-1-error-code/",
+    "source": "GameSpot",
+    "section": "ألعاب",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-20 18:11:58 UTC"
   }
 ]
