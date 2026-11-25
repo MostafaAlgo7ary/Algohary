@@ -30,7 +30,7 @@ def fit_article(article, target, glossary, source_name, source_text=""):
     allowed = allowed_latin_words()
 
     def check(art):
-        return arabic_check.validate(art, allowed, config, target, source_name, glossary)
+        return arabic_check.validate(art, allowed, config, target, source_name, glossary, source_text)
 
     problems = check(article)
     for round_no in range(1, config.FIT_ROUNDS + 1):
@@ -124,13 +124,15 @@ def build_article(item, section, glossary):
     if len(source_text) < 300:
         return None, "مادة المصدر قصيرة جدًا"
 
-    # طول المقال المطلوب = عدد كلمات مقال المصدر
-    target = arabic_check.count_words(text)
-    if target < config.MIN_WORDS:
-        return None, f"مقال المصدر قصير جدًا ({target} كلمة)"
-    if target > config.MAX_WORDS:
-        return None, f"مقال المصدر طويل جدًا ({target} كلمة)"
-    print(f"   📏 طول المصدر = الطول المطلوب: {target} كلمة")
+    # طول المقال المطلوب = طول المصدر × النسبة (المقال يضيف شرحًا وسياقًا فيكون أطول)
+    src_words = arabic_check.count_words(text)
+    if src_words < config.MIN_WORDS:
+        return None, f"مقال المصدر قصير جدًا ({src_words} كلمة)"
+    if src_words > config.MAX_WORDS:
+        return None, f"مقال المصدر طويل جدًا ({src_words} كلمة)"
+    target = min(config.MAX_ARTICLE_WORDS,
+                 max(config.MIN_ARTICLE_WORDS, round(src_words * config.ARTICLE_RATIO)))
+    print(f"   📏 طول المصدر {src_words} كلمة، الطول المطلوب للمقال: {target} كلمة")
     print(f"   🔎 يبدأ المصدر: {text[:70]} … ينتهي: {text[-70:]}")
 
     k = config.SUBHEADINGS
@@ -144,7 +146,7 @@ def build_article(item, section, glossary):
             if config.PROOFREAD:
                 article = writer.proofread(article, gloss_rows)
                 article = arabic_check.clean_article(article, glossary, k)
-            article, problems = fit_article(article, target, glossary, item["source"], text)
+            article, problems = fit_article(article, target, glossary, item["source"], source_text)
         except writer.LLMUnavailable:
             raise   # عطل تقني في النماذج لا ذنب للخبر فيه: لا نحرق الخبر ولا نكمل
         except Exception as e:
