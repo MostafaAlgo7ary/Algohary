@@ -3,6 +3,8 @@ import base64
 import binascii
 import json
 import os
+import time
+from functools import lru_cache
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -38,6 +40,7 @@ def _load_token_info(raw):
         "أعد توليدها بـ scripts/get_blogger_token.py وانسخها كاملة في الـ Secret.")
 
 
+@lru_cache(maxsize=1)
 def _service():
     raw = os.environ.get("BLOGGER_TOKEN", "")
     if not raw:
@@ -62,6 +65,14 @@ def related_posts(label, limit):
 
 def publish(title, html, labels):
     body = {"kind": "blogger#post", "title": title, "content": html, "labels": labels}
-    res = _service().posts().insert(blogId=config.BLOG_ID, body=body,
-                                    isDraft=config.PUBLISH_AS_DRAFT).execute()
-    return res.get("url") or res.get("id")
+    last = None
+    for attempt in range(3):   # إعادة المحاولة عند أخطاء الشبكة/الحصة المؤقتة
+        try:
+            res = _service().posts().insert(blogId=config.BLOG_ID, body=body,
+                                            isDraft=config.PUBLISH_AS_DRAFT).execute()
+            return res.get("url") or res.get("id")
+        except Exception as e:
+            last = e
+            print(f"⚠️ فشل النشر (محاولة {attempt + 1}/3): {e}")
+            time.sleep(5 * (attempt + 1))
+    raise last
