@@ -404,5 +404,26 @@
     "section": "فن",
     "reason": "مقال المصدر قصير جدًا (0 كلمة)",
     "failed_at": "2026-11-25 07:51:04 UTC"
+  },
+  {
+    "link": "https://www.btolat.com/news/416330",
+    "source": "Btolat",
+    "section": "رياضة",
+    "reason": "مقال المصدر قصير جدًا (59 كلمة)",
+    "failed_at": "2026-11-25 21:23:20 UTC"
+  },
+  {
+    "link": "https://www.arriyadiyah.com/904952/بديل-بيدرو..-20-مرشحا",
+    "source": "Arriyadiyah",
+    "section": "رياضة",
+    "reason": "مقال المصدر قصير جدًا (186 كلمة)",
+    "failed_at": "2026-11-25 21:23:20 UTC"
+  },
+  {
+    "link": "https://www.so3ody.com/news/226293/بث-مباشر-مباراة-باريس-سان-جيرمان-وروما-اليوم-في-دوري-أبطال-أوروبا/كرة-عالمية?utm_source=urgent_bar",
+    "source": "So3ody",
+    "section": "رياضة",
+    "reason": "مقال المصدر قصير جدًا (182 كلمة)",
+    "failed_at": "2026-11-25 21:23:21 UTC"
   }
 ]
