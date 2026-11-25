@@ -6,7 +6,7 @@ import time
 from urllib.parse import urlparse
 
 import config
-from src import arabic_check, blogger, fetcher, html_builder, images, state, writer
+from src import arabic_check, blogger, fetcher, html_builder, images, relevance, state, writer
 
 
 def load_json(path):
@@ -117,9 +117,28 @@ def article_gloss_rows(glossary, article):
     return "\n".join(rows[:40]) if rows else "لا يوجد"
 
 
+def _ask_llm():
+    """دالة سؤال نموذج للفحص الرخيص. غيّر الاسم هنا لو اسم دالة النموذج في writer.py مختلف."""
+    for name in ("ask", "ask_llm", "chat", "complete", "call_llm", "llm"):
+        fn = getattr(writer, name, None)
+        if callable(fn):
+            return fn
+    return None
+
+
 def build_article(item, section, glossary):
     """يكتب ويراجع ويضبط الطول ويتحقق. يعيد (مقال، None) أو (None، سبب الفشل)."""
+    # بوابة الصلة 1: عنوان + ملخص قبل أي جلب أو كتابة (لا استهلاك توكنز على خبر غريب عن القسم)
+    ok, why = relevance.keyword_gate(section["label"], item["title"], item.get("summary", ""))
+    if not ok:
+        return None, "خارج القسم: " + why
     text = fetcher.fetch_article_text(item["url"])
+    ok, why = relevance.keyword_gate(section["label"], item["title"], f"{item.get('summary', '')} {text}")
+    if ok and config.LLM_RELEVANCE:
+        ok, why = relevance.llm_gate(section["label"], section.get("topic", ""), item["title"],
+                                     f"{item.get('summary', '')} {text}", _ask_llm())
+    if not ok:
+        return None, "خارج القسم: " + why
     source_text = f"{item['title']} {item.get('summary', '')} {text}"
     if len(source_text) < 300:
         return None, "مادة المصدر قصيرة جدًا"
@@ -153,6 +172,9 @@ def build_article(item, section, glossary):
             problems = [f"خطأ تقني: {str(e)[:100]}"]
             continue
 
+        ok, why = relevance.post_write_gate(section["label"], article)   # بوابة الصلة 2: بعد الكتابة
+        if not ok:
+            return None, "خارج القسم: " + why
         body = " ".join(arabic_check.body_parts(article))
         overlap = arabic_check.source_overlap(body, source_text)
         if overlap > config.MAX_SOURCE_OVERLAP:
