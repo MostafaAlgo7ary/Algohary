@@ -2,7 +2,7 @@ name: Publish Gov Jobs
 
 on:
   schedule:
-    - cron: '30 6 * * *'   # يوميًا: يفحص بوابة الوظائف وينشر الجديد فقط
+    - cron: '30 6 * * *'
   workflow_dispatch:
     inputs:
       publish_mode:
@@ -12,12 +12,12 @@ on:
         options:
           - نشر مباشر
           - مسودة
-      only_live:
-        description: '🌐 الجديد من البوابة فقط (تخطي الملف المحفوظ)'
+      dry_run:
+        description: '🧪 تجربة فقط: لا تنشر'
         type: boolean
         default: false
-      dry_run:
-        description: '🧪 تجربة فقط'
+      ignore_history:
+        description: '♻️ تجاهل سجل الوظائف (ينشر الكل من جديد)'
         type: boolean
         default: false
 
@@ -29,32 +29,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  jobs:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r requirements.txt
-      - name: Publish jobs
+
+      - name: Install fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-core fonts-dejavu-core
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Run
         env:
           BLOGGER_TOKEN: ${{ secrets.BLOGGER_TOKEN }}
-          BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
-          BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
           BLOG_ID: ${{ secrets.BLOG_ID }}
           PUBLISH_AS_DRAFT: ${{ (inputs.publish_mode == 'مسودة' && 'true') || 'false' }}
-          INPUT_ONLY_LIVE: ${{ inputs.only_live || (github.event_name == 'schedule' && 'true') || 'false' }}
           INPUT_DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          INPUT_IGNORE_HISTORY: ${{ inputs.ignore_history || 'false' }}
+          INPUT_ONLY_LIVE: ${{ github.event_name == 'schedule' && 'true' || 'false' }}
         run: python -m src.jobs
-      - name: Commit history
+
+      - name: Commit history and images
         if: always()
         run: |
           git config user.name "Auto Blogger Bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data || true
-          git diff --staged --quiet || git commit -m "chore: jobs history [skip ci]"
+          git add data images || true
+          git diff --staged --quiet || git commit -m "chore: jobs history and images [skip ci]"
           git pull --rebase || true
           git push || true
