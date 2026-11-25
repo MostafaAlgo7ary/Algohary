@@ -12,7 +12,7 @@ from urllib.parse import urljoin
 import requests
 
 import config
-from src import blogger
+from src import blogger, jobs_image
 
 JOBS_SOURCE_URL = "https://jobs.caoa.gov.eg/Jobs/SearchJobs.aspx?WorkType=1"
 JOBS_SOURCE_NAME = "بوابة الوظائف الحكومية (CAOA)"
@@ -154,14 +154,19 @@ def _list(text):
     return "<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in items) + "</ul>" if items else ""
 
 
-def render(group):
+def render(group, image_url="", alt="", related=None):
     """HTML المقال: كل وظيفة بعنوان فرعي وبياناتها الكاملة كما وردت في الإعلان الرسمي."""
     j0 = group[0]
     ent = _clean_name(j0["entity"])
     intro = (f"أعلنت {ent} عن وظائف جديدة عبر البوابة الحكومية للوظائف (عدد الإعلانات في هذا المقال: {len(group)}). "
              f"التقديم ينتهي في {j0.get('end', 'الموعد المذكور في الإعلان')}. "
              "هذه البيانات منقولة من صفحة الإعلان الرسمي، ويُنصح بمراجعة الصفحة نفسها قبل التقديم.")
-    parts = [f"<p>{html.escape(intro)}</p>"]
+    parts = []
+    if image_url:
+        parts.append('<div class="separator" style="clear: both; text-align: center;">'
+                     f'<img alt="{html.escape(alt)}" border="0" height="630" width="1200" '
+                     f'src="{html.escape(image_url)}" style="max-width:100%;height:auto"/></div>')
+    parts.append(f"<p>{html.escape(intro)}</p>")
     for j in group:
         parts.append(f"<h2>{html.escape(j['title'])}</h2>")
         rows = [("جهة الإعلان", j.get("entity")), ("العدد المطلوب", j.get("count")), ("محل العمل", j.get("place")),
@@ -177,6 +182,9 @@ def render(group):
     src = j0.get("url") or JOBS_SOURCE_URL
     parts.append(f'<p><small>المصدر: <a href="{html.escape(src)}" target="_blank" rel="nofollow noopener">'
                  f"{JOBS_SOURCE_NAME}</a></small></p>")
+    if related:
+        items = "".join(f'<li><a href="{html.escape(u)}">{html.escape(t)}</a></li>' for t, u in related)
+        parts.append(f"<h3>اقرأ أيضًا</h3><ul>{items}</ul>")
     return "\n".join(parts)
 
 
@@ -204,7 +212,7 @@ def main():
         with open(SEED_FILE, encoding="utf-8") as f:
             jobs += parse_jobs(f.read())
     jobs += fetch_live()
-    history = load_history()
+    history = set() if os.environ.get("INPUT_IGNORE_HISTORY", "false").lower() == "true" else load_history()
     new, seen = [], set()
     for j in jobs:
         fp = fingerprint(j)
@@ -216,7 +224,15 @@ def main():
     print(f"وظائف جديدة: {len(new)} في {len(groups)} مقال")
     failed = 0
     for g in groups:
-        title, body = title_for(g), render(g)
+        title = title_for(g)
+        try:
+            card = jobs_image.make_card(title, g[0].get("end", ""), len(g), _clean_name(g[0]["entity"]))
+            img_url = jobs_image.public_url(card)
+        except Exception as e:          # فشل الصورة لا يمنع النشر
+            print(f"⚠️ تعذّر رسم الصورة: {e}")
+            img_url = ""
+        related = [] if dry else blogger.related_posts(JOBS_LABEL, config.RELATED_LINKS)
+        body = render(g, img_url, title, related)
         if dry:
             print("🧪", title, len(body))
             continue
