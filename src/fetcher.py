@@ -94,15 +94,36 @@ def fetch_rss(source, _fallback=True):
 _SKIP = re.compile(r"/(tag|tags|category|author|video|videos|gallery|live|about|contact|privacy|search)(/|$)", re.I)
 
 
+_NOISE_BLOCK = re.compile(r"ticker|breaking|urgent|sidebar|side-?bar|most-?read|mostread|trending|widget|"
+                          r"related|newsletter|footer|navbar|nav-|menu|advert|banner", re.I)
+
+
 def fetch_html_listing(source):
+    """صفحة قائمة. نقرأ فقط منطقة الأخبار الرئيسية (source["scope"] = محدد CSS اختياري)،
+    ونتجاهل شريط الأخبار العاجلة والأعمدة الجانبية والقوائم: هذه تحمل أخبار كل الأقسام (سبب ظهور
+    مقالات الأهلي والصحة والسياسة في قسم الفن)."""
     items, seen = [], set()
     try:
         soup = BeautifulSoup(_get(source["url"]).content, "html.parser")
     except Exception as e:
         print(f"⚠️ فشل جلب {source['name']}: {e}")
         return items
+    for t in soup(["nav", "footer", "aside", "header", "script", "style", "noscript"]):
+        t.decompose()
+    scope = soup
+    if source.get("scope"):
+        scope = soup.select_one(source["scope"])
+        if scope is None:
+            print(f"⚠️ {source['name']}: لم نجد منطقة الأخبار ({source['scope']}) — نتخطى المصدر بدل قراءة الصفحة كلها")
+            return items
+    for el in list(scope.find_all(True)):
+        if getattr(el, "decomposed", False) or not el.attrs:
+            continue
+        marks = " ".join(el.get("class", [])) + " " + (el.get("id") or "")
+        if _NOISE_BLOCK.search(marks):
+            el.decompose()
     host = urlparse(source["url"]).netloc
-    for a in soup.find_all("a", href=True):
+    for a in scope.find_all("a", href=True):
         url = urljoin(source["url"], a["href"]).split("#")[0]
         p = urlparse(url)
         title = _clean(a.get_text(" "))
