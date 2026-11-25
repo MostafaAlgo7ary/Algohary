@@ -89,6 +89,7 @@ SUBHEADINGS = 3             # ثلاثة أقسام: ماذا حدث / السي�
 PARAGRAPH_WORDS = 55        # متوسط طول الفقرة المستهدف (بالكلمات)
 PARAGRAPH_MAX_WORDS = 90    # أقصى طول مسموح لفقرة واحدة
 MAX_SOURCE_OVERLAP = 0.12   # أقصى نسبة تشابه (5 كلمات متتالية) مع نص المصدر
+LLM_RELEVANCE = (os.environ.get("LLM_RELEVANCE") or "true").lower() != "false"   # فحص الصلة بالنموذج (طلب صغير لكل مرشح)
 MAX_ATTEMPTS = 2            # محاولات الكتابة لكل خبر
 MAX_CANDIDATES = 3          # عدد الأخبار التي نجرب بها قبل التخلي عن القسم
 
