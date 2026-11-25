@@ -65,6 +65,10 @@ def coerce(article, subheadings=None):
     if isinstance(kws, str):
         kws = re.split(r"[,،;؛\n]", kws)
     a["secondary_keywords"] = [_str(k) for k in (kws or []) if _str(k)]
+    tk = a.get("takeaways")
+    if isinstance(tk, str):
+        tk = re.split(r"\n+", tk)
+    a["takeaways"] = [_str(t) for t in (tk or []) if _str(t)][:5]
     secs = []
     for s in a.get("sections") or []:
         if not isinstance(s, dict):
@@ -215,6 +219,7 @@ def clean_article(article, glossary, subheadings=None):
     a["title"] = strip_punct(a["title"])
     a["intro"] = single_stop(a["intro"])
     a["secondary_keywords"] = [fix(k) for k in a["secondary_keywords"]]
+    a["takeaways"] = [single_stop(fix(t)) for t in a.get("takeaways", [])]
     for s in a["sections"]:
         s["heading"] = strip_punct(fix(s["heading"]))
         s["paragraphs"] = [q for p in s["paragraphs"] for q in split_long(single_stop(fix(p)))]
@@ -356,6 +361,7 @@ def _fields(article):
     yield article.get("title", "")
     yield article.get("description", "")
     yield article.get("intro", "")
+    yield from article.get("takeaways", [])
     for s in article.get("sections", []):
         yield s.get("heading", "")
         yield from s.get("paragraphs", [])
@@ -460,12 +466,66 @@ def seo_problems(article):
 # ======================================================================
 def _all_text(article):
     parts = [article.get("title", ""), article.get("description", ""),
-             article.get("image_alt", "")] + body_parts(article)
+             article.get("image_alt", "")] + body_parts(article) + list(article.get("takeaways", []))
     return " ".join(parts)
 
 
-def validate(article, allowed_latin, config, target=None, source_name=None, glossary=None):
+# ======================================================================
+# جودة العنوان (يمنع العناوين المبتورة أو المكررة مثل «جائزة 2026 لعام 2026»)
+# ======================================================================
+_DANGLING_END = {"في", "من", "على", "إلى", "الى", "عن", "مع", "و", "أن", "ان", "بعد", "قبل", "حول", "ل", "لـ",
+                 "بين", "عند", "لعام", "عام", "ثم", "أو", "او", "هل", "ما"}
+
+
+def title_problems(title):
+    p = []
+    toks = (title or "").split()
+    if len(toks) < 4:
+        p.append("العنوان قصير أو مبتور؛ اكتبه جملة كاملة مفيدة (فاعل + فعل + تفصيل) من 5 إلى 10 كلمات")
+        return p
+    if re.fullmatch(r"[\d٠-٩.]+", toks[0]):
+        p.append("العنوان يبدأ برقم أو سنة؛ ابدأ بالكيان الرئيسي")
+    seen, dup = set(), set()
+    for t in toks:
+        k = _loose(t)
+        if len(k) >= 2 or k.isdigit():
+            if k in seen:
+                dup.add(t)
+            seen.add(k)
+    if dup:
+        p.append("العنوان يكرر كلمات أو أرقامًا (" + "، ".join(sorted(dup)) + ")؛ أعد صياغته بلا تكرار")
+    if toks[-1] in _DANGLING_END:
+        p.append("العنوان ينتهي بحرف أو كلمة ناقصة المعنى؛ أكمل الجملة")
+    return p
+
+
+# ======================================================================
+# منع اختلاق الأرقام: أي رقم في المقال يجب أن يكون في مادة المصدر
+# ======================================================================
+_AR_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩٫٬", "0123456789.,")
+
+
+def _numbers(text):
+    t = (text or "").translate(_AR_DIGITS)
+    t = re.sub(r"(?<=\d)[,،](?=\d{3}\b)", "", t)
+    return set(re.findall(r"\d+(?:\.\d+)?", t))
+
+
+def unsupported_numbers(article, source_text):
+    """أرقام وردت في المقال ولا وجود لها في مادة المصدر (اختلاق محتمل)."""
+    if not source_text:
+        return []
+    allowed = _numbers(source_text)
+    used = _numbers(_all_text(article))
+    return sorted(n for n in used if n not in allowed)
+
+
+def validate(article, allowed_latin, config, target=None, source_name=None, glossary=None, source_text=None):
     problems = []
+    problems += title_problems(article.get("title", ""))
+    bad_nums = unsupported_numbers(article, source_text)
+    if bad_nums:
+        problems.append("أرقام غير موجودة في المادة المصدر (احذفها أو استبدلها بوصف بلا رقم): " + "، ".join(bad_nums[:6]))
     text = _all_text(article)
     if not article.get("title"):
         problems.append("العنوان فارغ")
