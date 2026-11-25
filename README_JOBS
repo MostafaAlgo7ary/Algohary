@@ -1,0 +1,5 @@
+مكان الملفات في المشروع:
+  src/jobs.py                    -> src/jobs.py
+  jobs.yml.txt                   -> .github/workflows/jobs.yml
+  data/jobs_seed.txt             -> data/jobs_seed.txt  (الإعلانات الحالية: 51 وظيفة)
+بعد الرفع: Actions > Publish Gov Jobs > Run workflow. (يدوي: نشر مباشر افتراضيًا. الفحص اليومي ينشر الجديد فقط.)
