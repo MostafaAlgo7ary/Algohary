@@ -2,6 +2,7 @@
 import json
 import re
 import time
+from datetime import datetime, timezone
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 import groq
@@ -308,7 +309,10 @@ def write_article(item, article_text, section, glossary, target, problems=None):
             f"{config.SUBHEADINGS} عنوان فرعي (نحو {head_w} كلمات)؛ "
             f"ثم فقرات قصيرة بواقع {', '.join(map(str, per_section))} فقرة لكل عنوان، وكل فقرة نحو {para_w} كلمة.\n"
             "الكلمة = أي مقطع يفصله فراغ ويحوي حرفًا أو رقمًا.")
-    user = (f"القسم: {section['label']} ({section['topic']})\n\n{plan}\n\n"
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date_note = (f"تاريخ اليوم: {today}. استخدم هذا التاريخ فقط للسنة الحالية، ولا تكتب سنة أو تاريخًا "
+                 "لم يرد في المادة، ولا تستنتج «العام المقبل» من عندك.\n\n")
+    user = (date_note + f"القسم: {section['label']} ({section['topic']})\n\n{plan}\n\n"
             f"القاموس الإلزامي للأسماء:\n{glossary_text(glossary, material)}\n\n"
             f"{material}")
     if config.WRITING_STYLE in STYLE_NOTES:
