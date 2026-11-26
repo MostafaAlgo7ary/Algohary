@@ -220,6 +220,21 @@ def pick_candidates(section, sources_cfg, history):
     return mixed
 
 
+def _queue_for_tiktok(article, section, card_path, result):
+    """يسجل المقال المنشور (مش المسودة) عشان خطوة تيكتوك بعد النشر. أي خطأ هنا لا يوقف المدونة."""
+    try:
+        if config.PUBLISH_AS_DRAFT or not str(result).startswith("http"):
+            return
+        import tempfile
+        path = os.environ.get("TT_QUEUE_FILE") or os.path.join(tempfile.gettempdir(), "tt_queue.json")
+        items = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else []
+        items.append({"title": article["title"], "description": article.get("description", ""),
+                      "url": str(result), "image": card_path, "section": section["label"]})
+        json.dump(items, open(path, "w", encoding="utf-8"), ensure_ascii=False)
+    except Exception as e:
+        print(f"ℹ️ تعذّر تسجيل المقال لتيكتوك: {e}")
+
+
 def run_section(section, sources_cfg, glossary, history, forced_item=None):
     print(f"\n━━━ القسم: {section['label']} ━━━")
     mixed = [forced_item] if forced_item else pick_candidates(section, sources_cfg, history)
@@ -252,6 +267,7 @@ def run_section(section, sources_cfg, glossary, history, forced_item=None):
         mode = "مسودة" if config.PUBLISH_AS_DRAFT else "منشور"
         print(f"   ✅ تم ({mode}): {result}")
         RESULTS.append((section["label"], f"✅ {mode}", article["title"], str(result)))
+        _queue_for_tiktok(article, section, card, result)
         state.save_history(item["url"], item["source"], section["label"], article["title"])
         history.add(item["url"])
         return True
