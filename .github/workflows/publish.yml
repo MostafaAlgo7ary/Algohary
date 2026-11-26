@@ -123,3 +123,13 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update history, state and images [skip ci]"
           git pull --rebase || true
           git push || true
+
+      - name: Post to TikTok via Buffer (optional)
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 8
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m src.tiktok_photo
