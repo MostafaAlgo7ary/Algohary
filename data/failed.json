@@ -467,5 +467,26 @@
     "section": "فن",
     "reason": "مقال المصدر طويل جدًا (1863 كلمة)",
     "failed_at": "2026-11-26 12:01:46 UTC"
+  },
+  {
+    "link": "https://www.btolat.com/news/416356",
+    "source": "Btolat",
+    "section": "رياضة",
+    "reason": "مقال المصدر قصير جدًا (127 كلمة)",
+    "failed_at": "2026-11-26 12:11:25 UTC"
+  },
+  {
+    "link": "https://www.arriyadiyah.com/904954/البريكان-يعود..-ويطير-من-الدوحة",
+    "source": "Arriyadiyah",
+    "section": "رياضة",
+    "reason": "مقال المصدر قصير جدًا (183 كلمة)",
+    "failed_at": "2026-11-26 12:11:25 UTC"
+  },
+  {
+    "link": "https://talksport.com/football/",
+    "source": "TalkSport",
+    "section": "رياضة",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «رياضة» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-26 12:11:25 UTC"
   }
 ]
