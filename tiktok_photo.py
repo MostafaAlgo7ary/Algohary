@@ -2,13 +2,17 @@
 - main.py بيسجل كل مقال اتنشر في ملف مؤقت (TT_QUEUE_FILE)
 - الخطوة دي بتعمل صورة طولية 1080x1920 من بطاقة المقال، وترفعها على فرع media (رابط عام)، وتبعتها لـ Buffer
 أي فشل بيتطبع بس ومبيوقفش المدونة."""
+import array
 import json
+import math
 import os
+import random
 import re
 import shutil
 import subprocess
 import tempfile
 import time
+import wave
 
 import requests
 from PIL import Image, ImageFilter
@@ -104,6 +108,78 @@ def host_file(path):
     raise RuntimeError("الرابط العام ماظهرش بعد ٩٠ ثانية")
 
 
+# ---------- موسيقى مولّدة بالكود (مفيش ملف صوت خارجي، فمفيش حقوق ملكية) ----------
+CHORDS = [  # تقدم هادي: Am - F - C - G (ترددات بالهرتز)
+    (220.00, 261.63, 329.63),
+    (174.61, 220.00, 261.63),
+    (261.63, 329.63, 392.00),
+    (196.00, 246.94, 293.66),
+]
+
+
+def make_music(path, seed_text, seconds=10, rate=22050):
+    """مسار موسيقي بسيط: وسادة هارمونية ناعمة + كيك خفيف + هاي هات. بيتغير شوية حسب العنوان."""
+    rnd = random.Random(seed_text)
+    bpm = rnd.choice([92, 100, 108, 116])
+    shift = rnd.choice([0, 2, 3, 5, 7]) / 12.0
+    mul = 2 ** shift
+    beat = 60.0 / bpm
+    n = int(seconds * rate)
+    buf = array.array("h", [0]) * n
+    chord_len = seconds / len(CHORDS)
+    noise = random.Random(7)
+    for i in range(n):
+        t = i / rate
+        ci = min(int(t / chord_len), len(CHORDS) - 1)
+        lt = t - ci * chord_len
+        env = min(1.0, lt / 0.4) * min(1.0, (chord_len - lt) / 0.4)
+        pad = 0.0
+        for f in CHORDS[ci]:
+            f *= mul
+            pad += math.sin(2 * math.pi * f * t) + 0.35 * math.sin(2 * math.pi * 2 * f * t)
+        pad = pad / 3.0 * env * 0.30
+        bt = t % beat
+        kick = math.sin(2 * math.pi * (50 + 90 * math.exp(-bt * 25)) * bt) * math.exp(-bt * 9) * 0.55
+        ht = (t + beat / 2) % beat
+        hat = (noise.random() * 2 - 1) * math.exp(-ht * 60) * 0.12
+        fade = min(1.0, t / 0.2) * min(1.0, (seconds - t) / 0.8)
+        v = (pad + kick + hat) * fade
+        buf[i] = int(max(-1.0, min(1.0, v)) * 30000)
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(buf.tobytes())
+    return path
+
+
+def ensure_ffmpeg():
+    if shutil.which("ffmpeg"):
+        return True
+    try:
+        subprocess.run(["sudo", "apt-get", "install", "-y", "--no-install-recommends", "ffmpeg"],
+                       check=True, capture_output=True, timeout=300)
+    except Exception as e:
+        print(f"  تعذّر تثبيت ffmpeg: {str(e)[:120]}")
+    return bool(shutil.which("ffmpeg"))
+
+
+def make_video(image_path, title, out_path, seconds=10):
+    """صورة طولية 1080x1920 -> فيديو mp4 فيه تقريب هادي + الموسيقى المولّدة."""
+    if not ensure_ffmpeg():
+        raise RuntimeError("ffmpeg مش موجود")
+    wav = make_music(os.path.join(tempfile.gettempdir(), "tt_music.wav"), title, seconds)
+    fps = 25
+    frames = seconds * fps
+    vf = (f"scale=1620:2880,zoompan=z='min(1+0.0009*on,1.14)':d={frames}:"
+          f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps={fps},format=yuv420p")
+    subprocess.run(["ffmpeg", "-y", "-i", image_path, "-i", wav, "-vf", vf, "-t", str(seconds),
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+                    "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-shortest", out_path],
+                   check=True, capture_output=True, timeout=300)
+    return out_path
+
+
 CREATE = """
 mutation($i: CreatePostInput!) {
   createPost(input: $i) {
@@ -125,30 +201,43 @@ def caption(item):
     return "\n\n".join(parts)[:2000]
 
 
-def post_item(key, channel, item):
-    img = vertical_image(item["image"], os.path.join(tempfile.gettempdir(), "tt_vertical.jpg"))
-    url = host_file(img)
+def _send(key, channel, item, assets, metadata):
     last = ""
     for mode in ("shareNow", "addToQueue"):
-        inp = {
-            "text": caption(item),
-            "channelId": channel,
-            "schedulingType": "automatic",
-            "mode": mode,
-            "assets": [{"image": {"url": url}}],
-            "metadata": {"tiktok": {"title": item["title"].strip()[:90]}},
-        }
+        inp = {"text": caption(item), "channelId": channel, "schedulingType": "automatic",
+               "mode": mode, "assets": assets, "metadata": metadata}
         try:
             res = _gql(key, CREATE, {"i": inp})["createPost"]
         except Exception as e:
             last = str(e)
             continue
         if res.get("post"):
-            print(f"✅ تيكتوك: Buffer استلم الصورة ({mode}) id={res['post']['id']}")
-            return True
+            print(f"✅ تيكتوك: Buffer استلم البوست ({mode}) id={res['post']['id']}")
+            return True, ""
         last = res.get("message", str(res))
-    print(f"❌ تيكتوك فشل: {last}")
-    return False
+    return False, last
+
+
+def post_item(key, channel, item):
+    img = vertical_image(item["image"], os.path.join(tempfile.gettempdir(), "tt_vertical.jpg"))
+    mode = (os.environ.get("TT_MODE") or "video").strip().lower()  # video | photo
+    if mode == "video":
+        try:
+            vid = make_video(img, item["title"], os.path.join(tempfile.gettempdir(), "tt_card.mp4"))
+            url = host_file(vid)
+            ok, err = _send(key, channel, item, [{"video": {"url": url}}],
+                            {"tiktok": {"isAiGenerated": True}})
+            if ok:
+                return True
+            print(f"⚠️ فيديو تيكتوك فشل ({err[:150]})، هجرب بوست صورة")
+        except Exception as e:
+            print(f"⚠️ تعذّر عمل الفيديو ({str(e)[:150]})، هجرب بوست صورة")
+    url = host_file(img)
+    ok, err = _send(key, channel, item, [{"image": {"url": url}}],
+                    {"tiktok": {"title": item["title"].strip()[:90]}})
+    if not ok:
+        print(f"❌ تيكتوك فشل: {err}")
+    return ok
 
 
 def main():
