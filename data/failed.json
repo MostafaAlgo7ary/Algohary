@@ -446,5 +446,19 @@
     "section": "تقنية",
     "reason": "مقال المصدر قصير جدًا (201 كلمة)",
     "failed_at": "2026-11-26 00:05:14 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/news/1043078/x-parental-controls-features",
+    "source": "The Verge",
+    "section": "تقنية",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «تقنية» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-26 11:45:12 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/gadgets/2026/11/google-search-alternative-kagi-launches-gmail-rival/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-26 11:45:13 UTC"
   }
 ]

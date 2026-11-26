@@ -845,5 +845,26 @@
     "section": "ألعاب",
     "title": "إضافة عواقب للعنف في غراند ثفت أوتو 6",
     "added_at": "2026-11-26 01:59:46 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/news/1043078/x-parental-controls-features",
+    "source": "The Verge",
+    "section": "تقنية",
+    "title": "(فشل) خارج القسم: لا كلمات تدل على قسم «تقنية» في العنوان أو بداية الخبر",
+    "added_at": "2026-11-26 11:45:12 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/gadgets/2026/11/google-search-alternative-kagi-launches-gmail-rival/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "title": "(فشل) مادة المصدر قصيرة جدًا",
+    "added_at": "2026-11-26 11:45:13 UTC"
+  },
+  {
+    "link": "https://techcrunch.com/2026/11/25/fcc-approves-spacex-plan-to-put-ai-data-centers-in-space/",
+    "source": "TechCrunch",
+    "section": "تقنية",
+    "title": "سبيس إكس يحصل على إذن مراكز بيانات فضائية",
+    "added_at": "2026-11-26 11:45:25 UTC"
   }
 ]
