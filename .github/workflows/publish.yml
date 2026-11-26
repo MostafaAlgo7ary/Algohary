@@ -1,8 +1,7 @@
 name: Auto Blogger News
 
 on:
-  schedule:
-    - cron: '0 */4 * * *'
+  # لا يوجد جدول داخلي: التشغيل من cron-job.org فقط (قسم لكل تشغيلة) عشان مفيش مقالات زيادة
   workflow_dispatch:
     inputs:
       section:
@@ -76,8 +75,8 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -86,10 +85,14 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install fonts
+      - name: Install fonts (best effort)
+        timeout-minutes: 6
+        continue-on-error: true
         run: |
-          sudo apt-get update
-          sudo apt-get install -y fonts-noto-core fonts-dejavu-core
+          if ! fc-list | grep -qi "noto"; then
+            sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y --no-install-recommends fonts-noto-core fonts-dejavu-core || \
+            (sudo apt-get update && sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends fonts-noto-core fonts-dejavu-core)
+          fi
 
       - name: Install packages
         run: pip install -r requirements.txt
