@@ -124,6 +124,13 @@ jobs:
           git pull --rebase || true
           git push || true
 
+      - name: Ensure ffmpeg for TikTok video (best effort)
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 8
+        run: |
+          which ffmpeg || (sudo apt-get -o Acquire::Retries=3 update && sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends ffmpeg)
+
       - name: Post to TikTok via Buffer (optional)
         if: always()
         continue-on-error: true
@@ -132,4 +139,4 @@ jobs:
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python -m src.tiktok_photo
+        run: python tiktok_photo.py
