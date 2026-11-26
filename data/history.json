@@ -922,5 +922,26 @@
     "section": "سفر",
     "title": "(فشل) خارج القسم: لا كلمات تدل على قسم «سفر» في العنوان أو بداية الخبر",
     "added_at": "2026-11-26 13:00:45 UTC"
+  },
+  {
+    "link": "https://www.thisiscolossal.com/2026/11/the-untold-story-of-the-yilki-horse-nur-tucker-book/",
+    "source": "Colossal",
+    "section": "فن",
+    "title": "(فشل) مقال المصدر قصير جدًا (0 كلمة)",
+    "added_at": "2026-11-26 15:00:31 UTC"
+  },
+  {
+    "link": "https://m.youm7.com/story/2026/11/26/تذكرتى-تعلن-إلغاء-جميع-حفلات-دار-الأوبرا-المصرية-حدادا-على/7633564",
+    "source": "اليوم السابع",
+    "section": "فن",
+    "title": "(فشل) مقال المصدر قصير جدًا (181 كلمة)",
+    "added_at": "2026-11-26 15:00:32 UTC"
+  },
+  {
+    "link": "https://news.artnet.com/art-world/hoor-al-qasimi-venice-biennale-2842478",
+    "source": "Artnet News",
+    "section": "فن",
+    "title": "(فشل) خارج القسم: لا كلمات تدل على قسم «فن» في العنوان أو بداية الخبر",
+    "added_at": "2026-11-26 15:00:32 UTC"
   }
 ]
