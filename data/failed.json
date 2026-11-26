@@ -551,5 +551,26 @@
     "section": "طعام",
     "reason": "خارج القسم: لا كلمات تدل على قسم «طعام» في العنوان أو بداية الخبر",
     "failed_at": "2026-11-26 17:00:28 UTC"
+  },
+  {
+    "link": "https://www.bbc.co.uk/news/articles/cwg5r02zel9qo?at_medium=RSS&at_campaign=rss",
+    "source": "BBC Business",
+    "section": "اقتصاد",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «اقتصاد» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-26 19:00:30 UTC"
+  },
+  {
+    "link": "https://www.cnbc.com/2026/11/26/micro-drama-apps-hollywood-vertical-video.html",
+    "source": "CNBC",
+    "section": "اقتصاد",
+    "reason": "مقال المصدر طويل جدًا (1436 كلمة)",
+    "failed_at": "2026-11-26 19:00:30 UTC"
+  },
+  {
+    "link": "https://m.youm7.com/story/2026/11/26/سعر-السمك-اليوم-الخميس-26-نوفمبر-2026-في-الإسكندرية/7633133",
+    "source": "اليوم السابع",
+    "section": "اقتصاد",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «اقتصاد» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-26 19:00:30 UTC"
   }
 ]
