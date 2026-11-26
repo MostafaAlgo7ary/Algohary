@@ -817,5 +817,26 @@
     "section": "رياضة",
     "title": "(فشل) مقال المصدر قصير جدًا (182 كلمة)",
     "added_at": "2026-11-25 21:23:21 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/tech/1042938/google-home-familiar-faces-onn-cameras",
+    "source": "The Verge",
+    "section": "تقنية",
+    "title": "(فشل) مقال المصدر قصير جدًا (159 كلمة)",
+    "added_at": "2026-11-26 00:05:14 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/space/2026/11/europes-hera-mission-returns-to-the-chaotic-scene-of-a-cosmic-smashup/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "title": "(فشل) خارج القسم: لا كلمات تدل على قسم «تقنية» في العنوان أو بداية الخبر",
+    "added_at": "2026-11-26 00:05:14 UTC"
+  },
+  {
+    "link": "https://techcrunch.com/2026/11/25/sp-considers-nvidia-credit-downgrade-over-governance-and-key-man-risks/",
+    "source": "TechCrunch",
+    "section": "تقنية",
+    "title": "(فشل) مقال المصدر قصير جدًا (201 كلمة)",
+    "added_at": "2026-11-26 00:05:14 UTC"
   }
 ]
