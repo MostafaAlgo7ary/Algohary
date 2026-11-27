@@ -579,5 +579,26 @@
     "section": "رياضة",
     "reason": "خارج القسم: لا كلمات تدل على قسم «رياضة» في العنوان أو بداية الخبر",
     "failed_at": "2026-11-26 21:00:40 UTC"
+  },
+  {
+    "link": "https://www.theverge.com/entertainment/1043489/midnight-diner-season3",
+    "source": "The Verge",
+    "section": "تقنية",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «تقنية» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-27 09:00:50 UTC"
+  },
+  {
+    "link": "https://arstechnica.com/cars/2026/11/volvos-big-batteries-we-drive-its-updated-2028-plug-in-hybrids/",
+    "source": "Ars Technica",
+    "section": "تقنية",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «تقنية» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-27 09:00:50 UTC"
+  },
+  {
+    "link": "https://techcrunch.com/2026/11/26/nvidia-hits-pause-on-chip-shipments-to-southeast-asia/",
+    "source": "TechCrunch",
+    "section": "تقنية",
+    "reason": "مقال المصدر قصير جدًا (113 كلمة)",
+    "failed_at": "2026-11-27 09:00:50 UTC"
   }
 ]
