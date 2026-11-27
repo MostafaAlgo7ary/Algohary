@@ -600,5 +600,26 @@
     "section": "تقنية",
     "reason": "مقال المصدر قصير جدًا (113 كلمة)",
     "failed_at": "2026-11-27 09:00:50 UTC"
+  },
+  {
+    "link": "https://www.ign.com/articles/pokemon-tcg-black-friday-deals-2026",
+    "source": "IGN",
+    "section": "ألعاب",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «ألعاب» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-27 11:00:30 UTC"
+  },
+  {
+    "link": "https://www.gamespot.com/articles/rockstar-games-has-a-gta-6-hit-on-its-hands-but-its-union-vote-is-a-loss/",
+    "source": "GameSpot",
+    "section": "ألعاب",
+    "reason": "مادة المصدر قصيرة جدًا",
+    "failed_at": "2026-11-27 11:00:31 UTC"
+  },
+  {
+    "link": "https://www.eurogamer.net/marvelous-developer-volentary-redundancy-amidst-console-business-restructuring",
+    "source": "Eurogamer",
+    "section": "ألعاب",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «ألعاب» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-27 11:00:31 UTC"
   }
 ]
