@@ -1041,5 +1041,26 @@
     "section": "ألعاب",
     "title": "(فشل) خارج القسم: لا كلمات تدل على قسم «ألعاب» في العنوان أو بداية الخبر",
     "added_at": "2026-11-27 11:00:31 UTC"
+  },
+  {
+    "link": "https://skift.com/2026/11/27/agodas-coo-on-ai-booking-nobody-knows-the-business-model-yet/",
+    "source": "Skift",
+    "section": "سفر",
+    "title": "(فشل) خارج القسم: لا كلمات تدل على قسم «سفر» في العنوان أو بداية الخبر",
+    "added_at": "2026-11-27 13:00:47 UTC"
+  },
+  {
+    "link": "https://www.atlasobscura.com/places/the-hidden-spiegeltent",
+    "source": "Atlas Obscura",
+    "section": "سفر",
+    "title": "(فشل) خارج القسم: المقال المكتوب لا يتصل بقسم «سفر»",
+    "added_at": "2026-11-27 13:00:57 UTC"
+  },
+  {
+    "link": "https://www.cntraveler.com/story/black-friday-hotel-deals-11-27-2026",
+    "source": "Conde Nast Traveler",
+    "section": "سفر",
+    "title": "(فشل) مقال المصدر طويل جدًا (1528 كلمة)",
+    "added_at": "2026-11-27 13:00:57 UTC"
   }
 ]
