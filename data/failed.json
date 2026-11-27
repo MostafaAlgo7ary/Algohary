@@ -642,5 +642,26 @@
     "section": "سفر",
     "reason": "مقال المصدر طويل جدًا (1528 كلمة)",
     "failed_at": "2026-11-27 13:00:57 UTC"
+  },
+  {
+    "link": "https://www.thisiscolossal.com/2026/11/the-book-of-the-human-body-taschen-anthology/",
+    "source": "Colossal",
+    "section": "فن",
+    "reason": "مقال المصدر قصير جدًا (0 كلمة)",
+    "failed_at": "2026-11-27 15:00:29 UTC"
+  },
+  {
+    "link": "https://m.youm7.com/story/2026/11/27/مهند-يعقوبى-موجة-جديدة-من-السينما-الفلسطينية-المستقلة-تتجاوز-قيود/7634485",
+    "source": "اليوم السابع",
+    "section": "فن",
+    "reason": "مقال المصدر قصير جدًا (112 كلمة)",
+    "failed_at": "2026-11-27 15:00:30 UTC"
+  },
+  {
+    "link": "https://news.artnet.com/art-world/friedrich-kunath-ica-miami-2842251",
+    "source": "Artnet News",
+    "section": "فن",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «فن» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-27 15:00:30 UTC"
   }
 ]
