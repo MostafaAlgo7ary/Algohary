@@ -670,5 +670,19 @@
     "section": "رياضة",
     "reason": "مقال المصدر قصير جدًا (74 كلمة)",
     "failed_at": "2026-11-27 21:00:31 UTC"
+  },
+  {
+    "link": "https://www.ign.com/articles/jenga-super-mario-edition-deal-black-friday-2026",
+    "source": "IGN",
+    "section": "ألعاب",
+    "reason": "مقال المصدر قصير جدًا (129 كلمة)",
+    "failed_at": "2026-11-28 11:00:23 UTC"
+  },
+  {
+    "link": "https://www.gamespot.com/articles/hollow-knight-silksongs-first-expansion-details-coming-friday-heres-how-to-watch/",
+    "source": "GameSpot",
+    "section": "ألعاب",
+    "reason": "خارج القسم: لا كلمات تدل على قسم «ألعاب» في العنوان أو بداية الخبر",
+    "failed_at": "2026-11-28 11:00:23 UTC"
   }
 ]
